@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class CReLU(nn.Module):
-    """ "
+    """
     Concatenated Rectified Linear Unit (CReLU).
     Taken from https://github.com/pytorch/pytorch/issues/1327
     """
