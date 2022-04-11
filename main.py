@@ -59,7 +59,9 @@ def main(
     train_dataloader = DataLoader(
         train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
     )
-    val_dataloader = DataLoader(val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True)
+    val_dataloader = DataLoader(
+        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True
+    )
 
     if display:
         images, labels = next(iter(train_dataloader))
@@ -193,7 +195,7 @@ if __name__ == "__main__":
         "--patience",
         type=int,
         default=5,
-        help="Patience step for Early Stopping callback - validation loss is monitored"
+        help="Patience step for Early Stopping callback - validation loss is monitored",
     )
     parser.add_argument(
         "--output_dir", type=str, help="Directory to store best models' checkpoints"
