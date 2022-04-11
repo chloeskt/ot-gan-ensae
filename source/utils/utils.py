@@ -5,6 +5,7 @@ from typing import List
 
 import numpy as np
 import torch
+from early_stopping_pytorch.pytorchtools import EarlyStopping
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
@@ -35,6 +36,7 @@ def process_data_to_retrieve_loss(
     nb_sinkhorn_iterations: int,
     device: str,
 ) -> torch.Tensor:
+    # get images on device
     images = images.to(device)
 
     # sample X, X' from images (real data)
@@ -77,11 +79,13 @@ def train_ot_gan(
     n_gen: int,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
+    patience: int,
     device: str,
     save: bool,
     output_dir: str,
 ) -> List[float]:
-    # TODO: add EarlyStopping feature
+    # EarlyStopping feature
+    early_stopping = EarlyStopping(patience=patience, verbose=True, path=output_dir)
 
     # Instantiate logger
     logger = logging.getLogger(__name__)
@@ -130,8 +134,8 @@ def train_ot_gan(
             batch_loop.set_postfix({"Loss:": loss.item()})
 
             # Evaluation every `eval_steps` steps
-            if i % (eval_steps + 1) == 0:
-                evaluate_ot_gan(
+            if i % (eval_steps + 1) == 0 and i != 0:
+                val_loss = evaluate_ot_gan(
                     critic,
                     generator,
                     val_dataloader,
@@ -143,12 +147,23 @@ def train_ot_gan(
                     device,
                 )
 
+                # Early stopping if validation loss increases
+                # (only for generator as we update it more often than the critic)
+                early_stopping(val_loss, generator)
+                if early_stopping.early_stop:
+                    logger.info("Point of early stopping reached")
+                    break
+
         # Get average epoch loss
         epoch_loss = running_loss / len(train_dataloader.dataset)
         all_losses.append(epoch_loss)
 
         # Add log info
-        logger.info(f"[Epoch {epoch}, Loss: {epoch_loss}")
+        logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
+        logger.info("\n")
+
+    # load the last checkpoint with the best model
+    generator.load_state_dict(torch.load("checkpoint.pt"))
 
     # Training done, save model if wanted
     if save:
@@ -194,6 +209,7 @@ def evaluate_ot_gan(
                 nb_sinkhorn_iterations,
                 device,
             )
+            batch_loop.set_postfix({"Loss:": loss.item()})
         running_val_loss += loss.item()
 
     return running_val_loss / len(dataloader)

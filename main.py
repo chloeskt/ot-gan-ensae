@@ -36,6 +36,7 @@ def main(
     n_gen: int,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
+    patience: int,
     output_dir: str,
     save: bool,
     device: str,
@@ -51,13 +52,14 @@ def main(
     )
     val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
+    print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
 
     logger.info("Creating dataloader")
-    ot_gan_batch_size = 2 * batch_size
+    ot_gan_batch_size = batch_size * 2
     train_dataloader = DataLoader(
-        train_mnist, batch_size=ot_gan_batch_size, shuffle=True
+        train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
     )
-    val_dataloader = DataLoader(val_mnist, batch_size=ot_gan_batch_size, shuffle=False)
+    val_dataloader = DataLoader(val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True)
 
     if display:
         images, labels = next(iter(train_dataloader))
@@ -126,6 +128,7 @@ def main(
         n_gen,
         eps_regularization,
         nb_sinkhorn_iterations,
+        patience,
         device,
         save,
         output_dir,
@@ -158,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--eval_steps",
         type=int,
-        default=20000,
+        default=10000,
         help="Number of steps before evaluating OT-GAN",
     )
     parser.add_argument(
@@ -185,6 +188,12 @@ if __name__ == "__main__":
         "--nb_sinkhorn_iterations",
         type=int,
         help="Number of iterations for Sinkhorn algorithm",
+    )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        default=5,
+        help="Patience step for Early Stopping callback - validation loss is monitored"
     )
     parser.add_argument(
         "--output_dir", type=str, help="Directory to store best models' checkpoints"
@@ -229,6 +238,7 @@ if __name__ == "__main__":
         n_gen=args.n_gen,
         eps_regularization=args.eps_regularization,
         nb_sinkhorn_iterations=args.nb_sinkhorn_iterations,
+        patience=args.patience,
         output_dir=args.output_dir,
         save=args.save,
         device=args.device,
