@@ -40,6 +40,3 @@ class MinibatchEnergyDistance(nn.Module):
         )
 
         return term1 + term2 + term3 + term4 - 2 * term5 - 2 * term6
-
-
-# python main.py --seed 0 --batch_size 32 --data_path /mnt/hdd/ot-gan-ensae --epochs 25 --learning_rate 1e-4 --weight_decay 0. --eps_regularization 1. --nb_sinkhorn_iterations 10 --output_dir /mnt/hdd/ot-gan-ensae/models --save True --device cpu

@@ -13,7 +13,8 @@ from source import (
     Generator,
     Critic,
     train_ot_gan,
-    MinibatchEnergyDistance, set_seed,
+    MinibatchEnergyDistance,
+    set_seed,
 )
 
 AUGMENTED_MNIST_SHAPE = 32
@@ -26,6 +27,7 @@ def main(
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     nb_channels: int,
+    eval_steps: int,
     learning_rate: float,
     weight_decay: float,
     beta1: float,
@@ -44,15 +46,21 @@ def main(
 
     # MNIST dataset, image of size 28x28
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
-    mnist = MNIST(data_path, download=True, transform=mnist_transforms)
-    print("Number of images in MNIST dataset: {}".format(len(mnist)))
+    train_mnist = MNIST(
+        data_path, train=True, download=True, transform=mnist_transforms
+    )
+    val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
+    print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
 
     logger.info("Creating dataloader")
     ot_gan_batch_size = 2 * batch_size
-    dataloader = DataLoader(mnist, batch_size=ot_gan_batch_size, shuffle=True)
+    train_dataloader = DataLoader(
+        train_mnist, batch_size=ot_gan_batch_size, shuffle=True
+    )
+    val_dataloader = DataLoader(val_mnist, batch_size=ot_gan_batch_size, shuffle=False)
 
     if display:
-        images, labels = next(iter(dataloader))
+        images, labels = next(iter(train_dataloader))
         print("Labels: ", labels)
         print("Batch shape: ", images.size())
         show_mnist_data(images)
@@ -106,7 +114,9 @@ def main(
     train_losses = train_ot_gan(
         critic,
         generator,
-        dataloader,
+        train_dataloader,
+        val_dataloader,
+        eval_steps,
         optimizer_generator,
         optimizer_critic,
         criterion,
@@ -145,6 +155,12 @@ if __name__ == "__main__":
         "--nb_output_channels", type=int, default=1, help="Number of output channels"
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
+    parser.add_argument(
+        "--eval_steps",
+        type=int,
+        default=20000,
+        help="Number of steps before evaluating OT-GAN",
+    )
     parser.add_argument(
         "--learning_rate", type=float, help="Learning rate for Adam optimizer"
     )
@@ -204,6 +220,7 @@ if __name__ == "__main__":
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         nb_channels=args.nb_output_channels,
+        eval_steps=args.eval_steps,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         beta1=args.beta1,
