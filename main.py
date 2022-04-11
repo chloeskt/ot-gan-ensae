@@ -209,12 +209,19 @@ if __name__ == "__main__":
         type=str,
         help="Device on which to run the code, either cuda or cpu.",
     )
+    parser.add_argument(
+        "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
+    )
 
     args = parser.parse_args()
 
     # set seed
     SEED = args.seed
     set_seed(SEED)
+
+    # potentially change log level
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     train_losses = main(
         data_path=args.data_path,

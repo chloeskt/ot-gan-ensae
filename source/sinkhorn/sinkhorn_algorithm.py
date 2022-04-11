@@ -1,12 +1,13 @@
+import logging
+
 import torch
 
 from ..models import Critic
 
 
 def pairwise_cosine_distance(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    x_norm = x / torch.pow(torch.sum(torch.square(x), dim=1), 1 / 2).unsqueeze(1)
-    y_norm = y / torch.pow(torch.sum(torch.square(y), dim=1), 1 / 2).unsqueeze(1)
-    return 1 - x_norm @ y_norm.T
+    # normalization has already been done at the end of the Critic network
+    return 1 - x @ y.T
 
 
 def sinkhorn_algorithm(
@@ -17,7 +18,10 @@ def sinkhorn_algorithm(
     nb_sinkhorn_iterations: int,
     device: str,
 ):
-    """Computes a distance between X and Y"""
+    """Sinkhorn algorithm: https://arxiv.org/abs/1306.0895"""
+
+    logger = logging.getLogger(__name__)
+
     # feed to critic: maps images to learned latent space
     x = critic(x)
     y = critic(y)
@@ -35,8 +39,18 @@ def sinkhorn_algorithm(
     ones = torch.ones(n).to(device) / n
 
     # sinkhorn
-    for iteration in range(nb_sinkhorn_iterations):
-        a = ones / torch.matmul(k, b)
-        b = ones / torch.matmul(k, a)
+    with torch.no_grad():
+        for iteration in range(nb_sinkhorn_iterations):
+            a = ones / (torch.matmul(k, b) + 1e-8)
+            b = ones / (torch.matmul(k.T, a) + 1e-8)
 
-    return torch.dot(torch.matmul(k * c, b), a)
+    result = torch.dot(torch.matmul(k * c, b), a)
+    if torch.isnan(result):
+        logger.debug("\n")
+        logger.debug("ISSUE WITH SINKHORN ALGORITHM")
+        logger.debug("Kernel K", k)
+        logger.debug("a", a)
+        logger.debug("b", b)
+        logger.debug("c", c)
+
+    return result

@@ -71,8 +71,10 @@ def train_ot_gan(
     output_dir: str,
 ) -> List[float]:
     # EarlyStopping feature
-    checkpoint_path = os.path.join(output_dir, "checkpoint.pt")
-    early_stopping = EarlyStopping(patience=patience, verbose=True, path=checkpoint_path)
+    checkpoint_path = os.path.join(output_dir, "generator_checkpoint.pt")
+    early_stopping = EarlyStopping(
+        patience=patience, verbose=True, path=checkpoint_path
+    )
 
     # Instantiate logger
     logger = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ def train_ot_gan(
     # loop over epochs
     for epoch in epochs_loop:
         running_loss = 0
-        batch_loop = tqdm(train_dataloader, desc="Training of OT-GAN")
+        batch_loop = tqdm(train_dataloader, desc=f"Epoch {epoch}, Training of OT-GAN")
         for i, (images, _) in enumerate(batch_loop):
 
             # clear
@@ -110,6 +112,12 @@ def train_ot_gan(
             if i % (n_gen + 1) == 0:
                 # update critic
                 loss *= -1
+
+                if torch.isnan(loss):
+                    logger.debug("\n")
+                    logger.debug(f"ISSUE WITH LOSS: {loss.item()}")
+                    logger.debug(f"LOSS GRADIENTS: {loss.grad}")
+
                 loss.backward()
                 optimizer_critic.step()
             else:
@@ -118,8 +126,8 @@ def train_ot_gan(
                 optimizer_generator.step()
 
             running_loss += loss.item()
-            batch_loop.set_postfix({"Loss:": loss.item()})
 
+            batch_loop.set_postfix({"Loss:": loss.item()})
 
         # Get average epoch loss
         epoch_loss = running_loss / len(train_dataloader.dataset)
@@ -155,9 +163,7 @@ def train_ot_gan(
     # Training done, save model if wanted
     if save:
         logger.info(f"Saving models at {output_dir}")
-        generator_path = os.path.join(output_dir, "generator_checkpoint.pt")
         critic_path = os.path.join(output_dir, "critic_checkpoint.pt")
-        torch.save(generator.state_dict(), generator_path)
         torch.save(critic.state_dict(), critic_path)
 
     return all_losses
@@ -199,4 +205,4 @@ def evaluate_ot_gan(
             batch_loop.set_postfix({"Loss:": loss.item()})
         running_val_loss += loss.item()
 
-    return running_val_loss / len(dataloader)
+    return running_val_loss / len(dataloader.dataset)
