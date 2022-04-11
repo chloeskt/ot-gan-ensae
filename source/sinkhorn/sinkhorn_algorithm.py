@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import torch
 
@@ -54,3 +55,55 @@ def sinkhorn_algorithm(
         logger.debug("c", c)
 
     return result
+
+
+def new_sinkhorn_algorithm(
+    *c: torch.Tensor,
+    eps_regularization: float,
+    nb_sinkhorn_iterations: int,
+    device: str,
+    a: Optional[torch.Tensor] = None,
+    b: Optional[torch.Tensor] = None,
+    double: bool = True,
+    delta: float = 0.05
+):
+    c = torch.stack(c)
+
+    a = (
+        torch.ones(c.shape[0], c.shape[-1], 1, device=device) / c.shape[-1]
+        if a is None
+        else a
+    )
+    b = (
+        torch.ones(c.shape[0], c.shape[-1], 1, device=device) / c.shape[-1]
+        if b is None
+        else b
+    )
+
+    K = torch.exp(-c / eps_regularization).to(device)
+    v = torch.ones((b.shape[0], b.shape[1], 1)).to(device)
+
+    if double:
+        a = a.double()
+        b = b.double()
+        K = K.double()
+        v = v.double()
+
+    previous_u = None
+    for _ in range(nb_sinkhorn_iterations):
+        u = a / (K @ v)
+        v = b / (K.permute(0, 2, 1) @ u)
+
+        if (previous_u is not None) and (delta > 0):
+            distance = torch.mean(((u - previous_u) ** 2), 1)
+            rel_distance = distance / torch.mean((u**2), 1)
+            if rel_distance.max() < delta:
+                break
+
+        previous_u = u
+
+    return (
+        torch.diag_embed(u.reshape(-1, u.shape[1]))
+        @ K
+        @ torch.diag_embed(v.reshape(-1, v.shape[1]))
+    )

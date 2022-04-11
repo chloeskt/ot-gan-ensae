@@ -14,6 +14,7 @@ from source import (
     Critic,
     train_ot_gan,
     MinibatchEnergyDistance,
+    NewMinibatchEnergyDistance,
     set_seed,
 )
 
@@ -27,7 +28,8 @@ def main(
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     nb_channels: int,
-    learning_rate: float,
+    critic_learning_rate: float,
+    generator_learning_rate: float,
     weight_decay: float,
     beta1: float,
     beta2: float,
@@ -40,6 +42,7 @@ def main(
     save: bool,
     device: str,
     display: bool,
+    loss_v0: bool,
 ) -> List[float]:
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -94,13 +97,13 @@ def main(
     # Optimizers
     optimizer_generator = torch.optim.Adam(
         generator.parameters(),
-        lr=learning_rate,
+        lr=generator_learning_rate,
         betas=(beta1, beta2),
         weight_decay=weight_decay,
     )
     optimizer_critic = torch.optim.Adam(
         critic.parameters(),
-        lr=learning_rate,
+        lr=critic_learning_rate,
         betas=(beta1, beta2),
         weight_decay=weight_decay,
     )
@@ -110,7 +113,10 @@ def main(
 
     logger.info("Instantiate Mini-Batch Energy Distance Loss")
     # Define criterion
-    criterion = MinibatchEnergyDistance()
+    if loss_v0:
+        criterion = MinibatchEnergyDistance()
+    else:
+        criterion = NewMinibatchEnergyDistance()
 
     logger.info("Start training")
     # Training
@@ -159,7 +165,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
     parser.add_argument(
-        "--learning_rate", type=float, help="Learning rate for Adam optimizer"
+        "--critic_learning_rate", type=float, help="Learning rate for Critic using Adam optimizer"
+    )
+    parser.add_argument(
+        "--generator_learning_rate", type=float, help="Learning rate for Generator using Adam optimizer"
     )
     parser.add_argument(
         "--weight_decay", type=float, help="Weight decay for Adam optimizer"
@@ -212,6 +221,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
     )
+    parser.add_argument(
+        "--loss_v0",
+        type=bool,
+        default=True,
+        help="Set to True to use MinibatchEnergyDistance and to False to use NewMinibatchEnergyDistance ",
+    )
 
     args = parser.parse_args()
 
@@ -230,7 +245,8 @@ if __name__ == "__main__":
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         nb_channels=args.nb_output_channels,
-        learning_rate=args.learning_rate,
+        critic_learning_rate=args.critic_learning_rate,
+        generator_learning_rate=args.generator_learning_rate,
         weight_decay=args.weight_decay,
         beta1=args.beta1,
         beta2=args.beta2,
@@ -243,4 +259,5 @@ if __name__ == "__main__":
         save=args.save,
         device=args.device,
         display=args.display,
+        loss_v0=args.loss_v0,
     )

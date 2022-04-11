@@ -33,17 +33,19 @@ To train the OT-GAN we implemented, you can use the `main` script. For instance,
 ````bash
 python main.py \
         --seed 0 \
-        --batch_size 24 \
+        --batch_size 200 \
         --data_path /mnt/hdd/ot-gan-ensae \
-        --epochs 30 \
+        --epochs 50 \
         --patience 5 \
-        --learning_rate 1e-4 \
+        --critic_learning_rate 4e-3 \
+        --generator_learning_rate 1e-3 \
         --weight_decay 0. \
         --eps_regularization 0.1 \
-        --nb_sinkhorn_iterations 10 \
+        --nb_sinkhorn_iterations 100 \
         --output_dir /mnt/hdd/ot-gan-ensae/models \
         --save True \
-        --device cuda
+        --device cuda \
+        --loss_v0 True
 ````
 
 To see all possible arguments, run:
