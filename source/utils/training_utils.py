@@ -71,7 +71,8 @@ def train_ot_gan(
     output_dir: str,
 ) -> List[float]:
     # EarlyStopping feature
-    early_stopping = EarlyStopping(patience=patience, verbose=True, path=output_dir)
+    checkpoint_path = os.path.join(output_dir, "checkpoint.pt")
+    early_stopping = EarlyStopping(patience=patience, verbose=True, path=checkpoint_path)
 
     # Instantiate logger
     logger = logging.getLogger(__name__)
@@ -149,7 +150,7 @@ def train_ot_gan(
         logger.info("\n")
 
     # load the last checkpoint with the best model
-    generator.load_state_dict(torch.load("checkpoint.pt"))
+    generator.load_state_dict(torch.load(checkpoint_path))
 
     # Training done, save model if wanted
     if save:
