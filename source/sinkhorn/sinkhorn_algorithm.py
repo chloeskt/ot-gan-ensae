@@ -1,6 +1,6 @@
 import torch
 
-from source import Critic
+from ..models import Critic
 
 
 def pairwise_cosine_distance(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

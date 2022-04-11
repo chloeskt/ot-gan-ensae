@@ -9,7 +9,8 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
 
-from source import Critic, Generator, MinibatchEnergyDistance
+from ..models import Critic, Generator
+from ..sinkhorn import MinibatchEnergyDistance
 
 
 def set_seed(seed: int) -> None:
@@ -41,7 +42,7 @@ def train_ot_gan(
     output_dir: str,
 ) -> List[float]:
     # TODO: add EarlyStopping feature
-    
+
     # Instantiate logger
     logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def train_ot_gan(
         running_loss = 0
         batch_loop = tqdm(dataloader, desc="Training of OT-GAN")
         for i, (images, _) in enumerate(batch_loop):
-            images.to(device)
+            images = images.to(device)
 
             # clear
             optimizer_generator.zero_grad()
@@ -66,7 +67,7 @@ def train_ot_gan(
             # sample X, X' from images (real data)
             x, x_prime = torch.split(images, batch_size)
 
-            # generate fake samples from LATENT_DIM dimensional uniform dist between -1 and 1
+            # generate fake samples from latent_dim dimensional uniform dist between -1 and 1
             z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
             z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
             # feed to the generator
