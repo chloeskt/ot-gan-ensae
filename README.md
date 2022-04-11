@@ -36,7 +36,6 @@ python main.py \
         --batch_size 24 \
         --data_path /mnt/hdd/ot-gan-ensae \
         --epochs 30 \
-        --eval_steps 10000  \
         --patience 5 \
         --learning_rate 1e-4 \
         --weight_decay 0. \

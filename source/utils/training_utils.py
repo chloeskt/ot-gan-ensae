@@ -56,7 +56,6 @@ def train_ot_gan(
     generator: Generator,
     train_dataloader: DataLoader,
     val_dataloader: DataLoader,
-    eval_steps: int,
     optimizer_generator: Optimizer,
     optimizer_critic: Optimizer,
     criterion: MinibatchEnergyDistance,
@@ -120,30 +119,30 @@ def train_ot_gan(
             running_loss += loss.item()
             batch_loop.set_postfix({"Loss:": loss.item()})
 
-            # Evaluation every `eval_steps` steps
-            if i % (eval_steps + 1) == 0 and i != 0:
-                val_loss = evaluate_ot_gan(
-                    critic,
-                    generator,
-                    val_dataloader,
-                    criterion,
-                    batch_size,
-                    latent_dim,
-                    eps_regularization,
-                    nb_sinkhorn_iterations,
-                    device,
-                )
-
-                # Early stopping if validation loss increases
-                # (only for generator as we update it more often than the critic)
-                early_stopping(val_loss, generator)
-                if early_stopping.early_stop:
-                    logger.info("Point of early stopping reached")
-                    break
 
         # Get average epoch loss
         epoch_loss = running_loss / len(train_dataloader.dataset)
         all_losses.append(epoch_loss)
+
+        # Evaluation and the end of each epoch
+        val_loss = evaluate_ot_gan(
+            critic,
+            generator,
+            val_dataloader,
+            criterion,
+            batch_size,
+            latent_dim,
+            eps_regularization,
+            nb_sinkhorn_iterations,
+            device,
+        )
+
+        # Early stopping if validation loss increases
+        # (only for generator as we update it more often than the critic)
+        early_stopping(val_loss, generator)
+        if early_stopping.early_stop:
+            logger.info("Point of early stopping reached")
+            break
 
         # Add log info
         logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")

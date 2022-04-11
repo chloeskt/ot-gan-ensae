@@ -27,7 +27,6 @@ def main(
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     nb_channels: int,
-    eval_steps: int,
     learning_rate: float,
     weight_decay: float,
     beta1: float,
@@ -120,7 +119,6 @@ def main(
         generator,
         train_dataloader,
         val_dataloader,
-        eval_steps,
         optimizer_generator,
         optimizer_critic,
         criterion,
@@ -160,12 +158,6 @@ if __name__ == "__main__":
         "--nb_output_channels", type=int, default=1, help="Number of output channels"
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
-    parser.add_argument(
-        "--eval_steps",
-        type=int,
-        default=10000,
-        help="Number of steps before evaluating OT-GAN",
-    )
     parser.add_argument(
         "--learning_rate", type=float, help="Learning rate for Adam optimizer"
     )
@@ -231,7 +223,6 @@ if __name__ == "__main__":
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         nb_channels=args.nb_output_channels,
-        eval_steps=args.eval_steps,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         beta1=args.beta1,
