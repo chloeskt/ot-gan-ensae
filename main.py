@@ -54,8 +54,8 @@ def main(
         data_path, train=True, download=True, transform=mnist_transforms
     )
     val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
-    print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
-    print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
+    #print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
+    #print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
 
     logger.info("Creating dataloader")
     ot_gan_batch_size = batch_size * 2
