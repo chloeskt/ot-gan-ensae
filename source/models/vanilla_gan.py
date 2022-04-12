@@ -209,9 +209,9 @@ class GAN():
 
         # Training done, save model if wanted
         if self.save:
-            logger.info(f"Saving models at {self.output_dir}")
+            logger.info(f"Saving models at {self.output_dir}, as {self.name_save}")
             critic_path = os.path.join(self.output_dir, self.name_save)
-            torch.save(self.critic.state_dict(), critic_path)
+            torch.save(self.generator.state_dict(), critic_path)
 
         return all_losses
 # def train_gan_vanilla(

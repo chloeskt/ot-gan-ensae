@@ -410,10 +410,6 @@ if __name__ == "__main__":
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
     output_shape=[1,32,32]
-    critic=VanillaCritic(1024,args.gen_hidden_dim).to(args.device)
-    generator=VanillaGenerator(args.latent_dim,
-                               args.gen_hidden_dim,
-                               output_shape).to(args.device)
 
     train_losses = main_vanilla(
         data_path=args.data_path,
