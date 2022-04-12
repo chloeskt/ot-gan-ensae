@@ -25,6 +25,7 @@ def main(
     data_path: str,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     gen_output_dim: int,
@@ -134,6 +135,7 @@ def main(
         epochs,
         batch_size,
         latent_dim,
+        latent_type,
         n_gen,
         eps_regularization,
         nb_sinkhorn_iterations,
@@ -156,6 +158,13 @@ if __name__ == "__main__":
     parser.add_argument("--data_path", type=str, help="Path to store/retrieve the data")
     parser.add_argument(
         "--latent_dim", type=int, default=100, help="Dimension of the latent space"
+    )
+    parser.add_argument(
+        "--latent_type",
+        type=str,
+        default="uniform",
+        help="Type of the latent space",
+        choices=["gaussian", "uniform"],
     )
     parser.add_argument(
         "--gen_hidden_dim", type=int, default=1024, help="Generator hidden dimension"
@@ -255,6 +264,7 @@ if __name__ == "__main__":
         data_path=args.data_path,
         batch_size=args.batch_size,
         latent_dim=args.latent_dim,
+        latent_type=args.latent_type,
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         gen_output_dim=args.gen_output_dim,

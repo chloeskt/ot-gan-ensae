@@ -47,7 +47,7 @@ def sinkhorn_algorithm(
 
     result = torch.dot(torch.matmul(k * c, b), a)
     if torch.isnan(result):
-        logger.debug("\n")
+        print()
         logger.debug("ISSUE WITH SINKHORN ALGORITHM")
         logger.debug("Kernel K", k)
         logger.debug("a", a)
@@ -107,3 +107,18 @@ def new_sinkhorn_algorithm(
         @ K
         @ torch.diag_embed(v.reshape(-1, v.shape[1]))
     )
+
+
+def sinkhorn(a, b, C, reg=1, max_iters=100):
+    u = torch.ones_like(a).cuda()
+    v = torch.ones_like(b).cuda()
+
+    with torch.no_grad():
+        K = torch.exp(-C / reg)
+        for i in range(max_iters):
+            u = a / (torch.matmul(K, v) + 1e-8)
+            v = b / (torch.matmul(K.T, u) + 1e-8)
+
+    M = torch.matmul(torch.diag(u), torch.matmul(K, torch.diag(v)))
+
+    return M

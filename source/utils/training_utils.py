@@ -19,6 +19,7 @@ def process_data_to_retrieve_loss(
     criterion: MinibatchEnergyDistance,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
@@ -29,9 +30,14 @@ def process_data_to_retrieve_loss(
     # sample X, X' from images (real data)
     x, x_prime = torch.split(images, batch_size)
 
-    # generate fake samples from latent_dim dimensional uniform dist between -1 and 1
-    z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
-    z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+    if latent_type == "uniform":
+        # generate fake samples from a latent_dim dimensional uniform dist between -1 and 1
+        z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+        z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+    else:
+        # generate fake samples from a latent_dim dimensinal gaussian dist between 0 and 1
+        z = torch.randn(batch_size, latent_dim).to(device)
+        z_prime = torch.randn(batch_size, latent_dim).to(device)
     # feed to the generator
     y = generator(z)
     y_prime = generator(z_prime)
@@ -62,6 +68,7 @@ def train_ot_gan(
     epochs: int,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     n_gen: int,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
@@ -104,6 +111,7 @@ def train_ot_gan(
                 criterion,
                 batch_size,
                 latent_dim,
+                latent_type,
                 eps_regularization,
                 nb_sinkhorn_iterations,
                 device,
@@ -114,7 +122,7 @@ def train_ot_gan(
                 loss *= -1
 
                 if torch.isnan(loss):
-                    logger.debug("\n")
+                    print()
                     logger.debug(f"ISSUE WITH LOSS: {loss.item()}")
                     logger.debug(f"LOSS GRADIENTS: {loss.grad}")
 
@@ -141,6 +149,7 @@ def train_ot_gan(
             criterion,
             batch_size,
             latent_dim,
+            latent_type,
             eps_regularization,
             nb_sinkhorn_iterations,
             device,
@@ -155,7 +164,7 @@ def train_ot_gan(
 
         # Add log info
         logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
-        logger.info("\n")
+        print()
 
     # load the last checkpoint with the best model
     generator.load_state_dict(torch.load(checkpoint_path))
@@ -176,6 +185,7 @@ def evaluate_ot_gan(
     criterion: MinibatchEnergyDistance,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
@@ -198,6 +208,7 @@ def evaluate_ot_gan(
                 criterion,
                 batch_size,
                 latent_dim,
+                latent_type,
                 eps_regularization,
                 nb_sinkhorn_iterations,
                 device,
