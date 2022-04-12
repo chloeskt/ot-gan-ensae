@@ -138,6 +138,7 @@ def main(
         criterion = NewMinibatchEnergyDistance()
 
     logger.info("Start training")
+    latent_space='gaussian'
     # Training
     train_losses = train_ot_gan(
         critic,
@@ -146,7 +147,7 @@ def main(
         val_dataloader,
         optimizer_generator,
         optimizer_critic,
-        criterion,
+        NewMinibatchEnergyDistance,
         epochs,
         batch_size,
         latent_dim,
@@ -157,6 +158,7 @@ def main(
         device,
         save,
         output_dir,
+        latent_space,
     )
     return train_losses
 

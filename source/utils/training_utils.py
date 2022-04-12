@@ -22,6 +22,7 @@ def process_data_to_retrieve_loss(
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
+    latent_space : str,
 ) -> torch.Tensor:
     # get images on device
     images = images.to(device)
@@ -30,8 +31,13 @@ def process_data_to_retrieve_loss(
     x, x_prime = torch.split(images, batch_size)
 
     # generate fake samples from latent_dim dimensional uniform dist between -1 and 1
-    z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
-    z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+    if latent_space == 'gaussian':
+        z = torch.randn(batch_size, latent_dim)
+        z_prime = torch.randn(batch_size, latent_dim)
+    else:
+        z = 2 * torch.rand(batch_size, latent_dim) - 1
+        z_prime = 2 * torch.rand(batch_size, latent_dim) - 1
+
     # feed to the generator
     y = generator(z)
     y_prime = generator(z_prime)
@@ -69,6 +75,7 @@ def train_ot_gan(
     device: str,
     save: bool,
     output_dir: str,
+    latent_space : str,
 ) -> List[float]:
     # EarlyStopping feature
     checkpoint_path = os.path.join(output_dir, "generator_checkpoint.pt")
@@ -107,6 +114,7 @@ def train_ot_gan(
                 eps_regularization,
                 nb_sinkhorn_iterations,
                 device,
+                latent_space,
             )
 
             if i % (n_gen + 1) == 0:
