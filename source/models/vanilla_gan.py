@@ -130,7 +130,7 @@ class GAN():
                 if self.latent_space == 'gaussian':
                     z_random = torch.randn(self.batch_size, self.latent_dim).to(self.device)
                 else:
-                    z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)
+                    z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)-1
 
                 if i % (self.n_gen + 1) == 0:
                     # update critic
@@ -183,7 +183,7 @@ class GAN():
                     if self.latent_space == 'gaussian':
                         z_random = torch.randn(self.batch_size, self.latent_dim).to(self.device)
                     else:
-                        z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)
+                        z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)-1
 
                     G = self.generator(z_random)
                     G = self.critic(G)
