@@ -26,6 +26,7 @@ def main(
     batch_size: int,
     latent_dim: int,
     latent_type: str,
+    kernel_size: int,
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     gen_output_dim: int,
@@ -54,17 +55,12 @@ def main(
     train_mnist = MNIST(
         data_path, train=True, download=True, transform=mnist_transforms
     )
-    val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
-    print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
 
     logger.info("Creating dataloader")
     ot_gan_batch_size = batch_size * 2
     train_dataloader = DataLoader(
         train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
-    )
-    val_dataloader = DataLoader(
-        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True
     )
 
     if display:
@@ -76,11 +72,15 @@ def main(
     logger.info("Creating models")
     # Models
     generator = Generator(
-        latent_dim=latent_dim, hidden_dim=gen_hidden_dim, output_dim=gen_output_dim
+        latent_dim=latent_dim,
+        hidden_dim=gen_hidden_dim,
+        kernel_size=kernel_size,
+        output_dim=gen_output_dim,
     ).to(device)
     critic = Critic(
         hidden_dim=critic_hidden_dim,
         input_dim=gen_output_dim,
+        kernel_size=kernel_size,
         output_dim=critic_output_dim,
     ).to(device)
 
@@ -128,7 +128,6 @@ def main(
         critic,
         generator,
         train_dataloader,
-        val_dataloader,
         optimizer_generator,
         optimizer_critic,
         criterion,
@@ -166,6 +165,7 @@ if __name__ == "__main__":
         help="Type of the latent space",
         choices=["gaussian", "uniform"],
     )
+    parser.add_argument("--kernel_size", type=int, help="Kernel size")
     parser.add_argument(
         "--gen_hidden_dim", type=int, default=1024, help="Generator hidden dimension"
     )
@@ -265,6 +265,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         latent_dim=args.latent_dim,
         latent_type=args.latent_type,
+        kernel_size=args.kernel_size,
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         gen_output_dim=args.gen_output_dim,

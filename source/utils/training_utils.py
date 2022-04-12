@@ -61,7 +61,6 @@ def train_ot_gan(
     critic: Critic,
     generator: Generator,
     train_dataloader: DataLoader,
-    val_dataloader: DataLoader,
     optimizer_generator: Optimizer,
     optimizer_critic: Optimizer,
     criterion: MinibatchEnergyDistance,
@@ -141,23 +140,9 @@ def train_ot_gan(
         epoch_loss = running_loss / len(train_dataloader.dataset)
         all_losses.append(epoch_loss)
 
-        # Evaluation and the end of each epoch
-        val_loss = evaluate_ot_gan(
-            critic,
-            generator,
-            val_dataloader,
-            criterion,
-            batch_size,
-            latent_dim,
-            latent_type,
-            eps_regularization,
-            nb_sinkhorn_iterations,
-            device,
-        )
-
-        # Early stopping if validation loss increases
+        # Early stopping if training loss increases
         # (only for generator as we update it more often than the critic)
-        early_stopping(val_loss, generator)
+        early_stopping(epoch_loss, generator)
         if early_stopping.early_stop:
             logger.info("Point of early stopping reached")
             break
@@ -176,44 +161,3 @@ def train_ot_gan(
         torch.save(critic.state_dict(), critic_path)
 
     return all_losses
-
-
-def evaluate_ot_gan(
-    critic: Critic,
-    generator: Generator,
-    dataloader: DataLoader,
-    criterion: MinibatchEnergyDistance,
-    batch_size: int,
-    latent_dim: int,
-    latent_type: str,
-    eps_regularization: float,
-    nb_sinkhorn_iterations: int,
-    device: str,
-) -> float:
-    critic.eval()
-    generator.eval()
-
-    running_val_loss = 0.0
-    batch_loop = tqdm(dataloader, desc="Evaluation of OT-GAN")
-
-    with torch.no_grad():
-        for i, (images, _) in enumerate(batch_loop):
-            images = images.to(device)
-
-            # compute loss, Minibatch Energy Distance
-            loss = process_data_to_retrieve_loss(
-                images,
-                generator,
-                critic,
-                criterion,
-                batch_size,
-                latent_dim,
-                latent_type,
-                eps_regularization,
-                nb_sinkhorn_iterations,
-                device,
-            )
-            batch_loop.set_postfix({"Loss:": loss.item()})
-        running_val_loss += loss.item()
-
-    return running_val_loss / len(dataloader.dataset)
