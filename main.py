@@ -147,7 +147,7 @@ def main(
         val_dataloader,
         optimizer_generator,
         optimizer_critic,
-        NewMinibatchEnergyDistance,
+        criterion,
         epochs,
         batch_size,
         latent_dim,
