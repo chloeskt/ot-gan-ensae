@@ -195,10 +195,10 @@ class GAN():
             loss=running_val_loss / len(self.val_dataloader.dataset)
             # Early stopping if validation loss increases
             # (only for generator as we update it more often than the critic)
-            early_stopping(loss, self.generator)
-            if early_stopping.early_stop:
-                logger.info("Point of early stopping reached")
-                break
+            #early_stopping(loss, self.generator)
+            #if early_stopping.early_stop:
+            #    logger.info("Point of early stopping reached")
+            #    break
 
             # Add log info
             logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
