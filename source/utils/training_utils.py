@@ -76,9 +76,10 @@ def train_ot_gan(
     save: bool,
     output_dir: str,
     latent_space : str,
+    name_save : str,
 ) -> List[float]:
     # EarlyStopping feature
-    checkpoint_path = os.path.join(output_dir, "generator_checkpoint.pt")
+    checkpoint_path = os.path.join(output_dir, name_save)
     early_stopping = EarlyStopping(
         patience=patience, verbose=True, path=checkpoint_path
     )

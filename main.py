@@ -44,6 +44,7 @@ def main(
     device: str,
     display: bool,
     loss_v0: bool,
+    name_save: str
 ) -> List[float]:
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -138,7 +139,8 @@ def main(
         criterion = NewMinibatchEnergyDistance()
 
     logger.info("Start training")
-    latent_space='gaussian'
+    #latent_space='gaussian'
+
     # Training
     train_losses = train_ot_gan(
         critic,
@@ -159,6 +161,7 @@ def main(
         save,
         output_dir,
         latent_space,
+        name_save,
     )
     return train_losses
 
@@ -258,6 +261,18 @@ if __name__ == "__main__":
         default=True,
         help="Set to True to use MinibatchEnergyDistance and to False to use NewMinibatchEnergyDistance ",
     )
+    parser.add_argument(
+        "--name_save",
+        type=str,
+        default="generator_checkpoint.pt",
+        help="Name of the file to store/retrieve the data",
+    )
+    parser.add_argument(
+        "--latent_space",
+        type=str,
+        default="uniform",
+        help="Uniform or gaussian latent space",
+    )
 
     args = parser.parse_args()
 
@@ -292,4 +307,7 @@ if __name__ == "__main__":
         device=args.device,
         display=args.display,
         loss_v0=args.loss_v0,
+        name_save=args.name_save,
+        latent_space=args.latent_space,
+
     )
