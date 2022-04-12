@@ -152,6 +152,7 @@ def train_ot_gan(
             eps_regularization,
             nb_sinkhorn_iterations,
             device,
+            latent_space,
         )
 
         # Early stopping if validation loss increases
@@ -187,6 +188,7 @@ def evaluate_ot_gan(
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
+    latent_space : str,
 ) -> float:
     critic.eval()
     generator.eval()
@@ -209,6 +211,7 @@ def evaluate_ot_gan(
                 eps_regularization,
                 nb_sinkhorn_iterations,
                 device,
+                latent_space,
             )
             batch_loop.set_postfix({"Loss:": loss.item()})
         running_val_loss += loss.item()
