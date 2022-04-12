@@ -283,11 +283,9 @@ def main_vanilla(
 
     # LR Schedulers
     # Not implemented for now as none are used in the paper
-    VanillaGAN.train(10)
-    logger.info("Start training")
-    latent_space = 'uniform'
-
     # Training
+    logger.info("Start training")
+    VanillaGAN.train(epochs)
 
     return 'FINITO'
 
