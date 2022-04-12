@@ -18,6 +18,8 @@ from source import (
     set_seed,
 )
 
+from source.models.vanilla_gan import VanillaCritic,GAN,VanillaGenerator
+
 AUGMENTED_MNIST_SHAPE = 32
 
 
@@ -139,7 +141,7 @@ def main(
         criterion = NewMinibatchEnergyDistance()
 
     logger.info("Start training")
-    #latent_space='gaussian'
+    latent_space = 'uniform'
 
     # Training
     train_losses = train_ot_gan(
@@ -163,6 +165,130 @@ def main(
         latent_space,
         name_save,
     )
+    return train_losses
+
+def main_vanilla(
+    data_path: str,
+    batch_size: int,
+    latent_dim: int,
+    gen_hidden_dim: int,
+    critic_hidden_dim: int,
+    gen_output_dim: int,
+    critic_output_dim: int,
+    critic_learning_rate: float,
+    generator_learning_rate: float,
+    weight_decay: float,
+    beta1: float,
+    beta2: float,
+    epochs: int,
+    n_gen: int,
+    eps_regularization: float,
+    nb_sinkhorn_iterations: int,
+    patience: int,
+    output_dir: str,
+    save: bool,
+    device: str,
+    display: bool,
+    loss_v0: bool,
+    name_save: str,
+    latent_space :str,
+) -> List[float]:
+    logger = logging.getLogger(__name__)
+    logger.info("Loading requested data")
+
+    # MNIST dataset, image of size 28x28
+    # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
+    train_mnist = MNIST(
+        data_path, train=True, download=True, transform=mnist_transforms
+    )
+    val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
+    print('Changement')
+    #print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
+    #print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
+
+    logger.info("Creating dataloader")
+    ot_gan_batch_size = batch_size
+
+    #train_dataloader = DataLoader(
+    #    train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
+    #)
+
+    totalNumInTrainSet=60000
+    totalNumInValSet = 10000
+    train_size=10000
+    val_size = 2000
+    train_indices = torch.LongTensor(train_size).random_(0, totalNumInTrainSet)
+    val_indices = torch.LongTensor(val_size).random_(0, totalNumInValSet)
+    train_dataloader = torch.utils.data.DataLoader(train_mnist,
+        batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        sampler=SubsetRandomSampler(train_indices))
+
+    val_dataloader = DataLoader(
+        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        sampler = SubsetRandomSampler(val_indices)
+    )
+    #print("Number of bach in train DataLoader: {}".format(len(train_mnist)))
+    #print("Number of bach in val DataLoader: {}".format(len(val_mnist)))
+
+    if display:
+        images, labels = next(iter(train_dataloader))
+        print("Labels: ", labels)
+        print("Batch shape: ", images.size())
+        show_mnist_data(images)
+
+    logger.info("Creating models")
+    # Models
+    output_shape = (1, 32, 32)
+    critic = VanillaCritic(1024, args.gen_hidden_dim).to(args.device)
+    generator = VanillaGenerator(args.latent_dim,
+                                 args.gen_hidden_dim,
+                                 output_shape).to(args.device)
+
+
+    # Check of shapes
+    logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
+    summary(generator, input_size=(latent_dim,), device=device)
+
+    logger.info(
+        f"Summary of the Critic model with input shape (1, {AUGMENTED_MNIST_SHAPE})"
+    )
+    summary(
+        critic,
+        input_size=(1, AUGMENTED_MNIST_SHAPE, AUGMENTED_MNIST_SHAPE),
+        device=device,
+    )
+
+    logger.info("Creating optimizers")
+    # Optimizers
+    optimizer_generator = torch.optim.Adam(
+        generator.parameters(),
+        lr=generator_learning_rate,
+        betas=(beta1, beta2),
+        weight_decay=weight_decay,
+    )
+    optimizer_critic = torch.optim.Adam(
+        critic.parameters(),
+        lr=critic_learning_rate,
+        betas=(beta1, beta2),
+        weight_decay=weight_decay,
+    )
+
+ #   latent_space = 'uniform'
+    VanillaGAN=GAN(train_dataloader,val_dataloader,
+                   latent_dim,batch_size,
+                   device,save,output_dir,
+                   latent_space,name_save,
+                   optimizer_generator,optimizer_critic,
+                   generator,critic,2)
+
+    # LR Schedulers
+    # Not implemented for now as none are used in the paper
+    VanillaGAN.train(10)
+    logger.info("Start training")
+    latent_space = 'uniform'
+
+    # Training
+
     return train_losses
 
 
@@ -283,8 +409,13 @@ if __name__ == "__main__":
     # potentially change log level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
+    output_shape=[1,32,32]
+    critic=VanillaCritic(1024,args.gen_hidden_dim).to(args.device)
+    generator=VanillaGenerator(args.latent_dim,
+                               args.gen_hidden_dim,
+                               output_shape).to(args.device)
 
-    train_losses = main(
+    train_losses = main_vanilla(
         data_path=args.data_path,
         batch_size=args.batch_size,
         latent_dim=args.latent_dim,

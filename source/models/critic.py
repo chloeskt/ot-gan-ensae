@@ -4,7 +4,6 @@ import torch.nn as nn
 from .activations import CReLU
 from .utils import Reshape, L2Normalize
 
-
 class Critic(nn.Module):
     """
     Critic/Discriminator architecture, inspired from https://arxiv.org/abs/1803.05573
@@ -66,3 +65,4 @@ class Critic(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
+
