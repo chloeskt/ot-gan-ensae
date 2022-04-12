@@ -32,11 +32,11 @@ def process_data_to_retrieve_loss(
 
     # generate fake samples from latent_dim dimensional uniform dist between -1 and 1
     if latent_space == 'gaussian':
-        z = torch.randn(batch_size, latent_dim)
-        z_prime = torch.randn(batch_size, latent_dim)
+        z = torch.randn(batch_size, latent_dim).to(device)
+        z_prime = torch.randn(batch_size, latent_dim).to(device)
     else:
-        z = 2 * torch.rand(batch_size, latent_dim) - 1
-        z_prime = 2 * torch.rand(batch_size, latent_dim) - 1
+        z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+        z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
 
     # feed to the generator
     y = generator(z)
