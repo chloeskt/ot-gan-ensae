@@ -207,7 +207,6 @@ def main_vanilla(
     #print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
 
     logger.info("Creating dataloader")
-    ot_gan_batch_size = batch_size
 
     #train_dataloader = DataLoader(
     #    train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
@@ -220,11 +219,11 @@ def main_vanilla(
     train_indices = torch.LongTensor(train_size).random_(0, totalNumInTrainSet)
     val_indices = torch.LongTensor(val_size).random_(0, totalNumInValSet)
     train_dataloader = torch.utils.data.DataLoader(train_mnist,
-        batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        batch_size=batch_size, shuffle=False, drop_last=True,
         sampler=SubsetRandomSampler(train_indices))
 
     val_dataloader = DataLoader(
-        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        val_mnist, batch_size=batch_size, shuffle=False, drop_last=True,
         sampler = SubsetRandomSampler(val_indices)
     )
     #print("Number of bach in train DataLoader: {}".format(len(train_mnist)))
@@ -239,7 +238,8 @@ def main_vanilla(
     logger.info("Creating models")
     # Models
     output_shape = (1, 32, 32)
-    critic = VanillaCritic(1024, args.gen_hidden_dim).to(args.device)
+    nb_pixel=output_shape[0]*output_shape[1]*output_shape[2]
+    critic = VanillaCritic(nb_pixel, args.gen_hidden_dim).to(args.device)
     generator = VanillaGenerator(args.latent_dim,
                                  args.gen_hidden_dim,
                                  output_shape).to(args.device)
