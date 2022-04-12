@@ -37,11 +37,15 @@ python main.py \
         --data_path /mnt/hdd/ot-gan-ensae \
         --epochs 50 \
         --patience 5 \
+        --latent_dim 100 \
         --critic_learning_rate 4e-3 \
         --generator_learning_rate 1e-3 \
+        --gen_hidden_dim 256 \
+        --critic_hidden_dim 32 \
+        --critic_output_dim 8192 \
         --weight_decay 0. \
         --eps_regularization 0.1 \
-        --nb_sinkhorn_iterations 100 \
+        --nb_sinkhorn_iterations 10 \
         --output_dir /mnt/hdd/ot-gan-ensae/models \
         --save True \
         --device cuda \
