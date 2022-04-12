@@ -3,7 +3,7 @@ import logging
 from typing import List
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchsummary import summary
 from torchvision.datasets import MNIST
 
@@ -59,11 +59,24 @@ def main(
 
     logger.info("Creating dataloader")
     ot_gan_batch_size = batch_size * 2
-    train_dataloader = DataLoader(
-        train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
-    )
+
+    #train_dataloader = DataLoader(
+    #    train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
+    #)
+
+    totalNumInTrainSet=60000
+    totalNumInValSet = 10000
+    train_size=10000
+    val_size = 2000
+    train_indices = torch.LongTensor(train_size).random_(0, totalNumInTrainSet)
+    val_indices = torch.LongTensor(val_size).random_(0, totalNumInValSet)
+    train_dataloader = torch.utils.data.DataLoader(train_mnist,
+        batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        sampler=SubsetRandomSampler(train_indices))
+
     val_dataloader = DataLoader(
-        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True
+        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
+        sampler = SubsetRandomSampler(val_indices)
     )
 
     if display:
