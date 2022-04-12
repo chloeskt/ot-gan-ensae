@@ -78,6 +78,8 @@ def main(
         val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True,
         sampler = SubsetRandomSampler(val_indices)
     )
+    #print("Number of bach in train DataLoader: {}".format(len(train_mnist)))
+    #print("Number of bach in val DataLoader: {}".format(len(val_mnist)))
 
     if display:
         images, labels = next(iter(train_dataloader))
