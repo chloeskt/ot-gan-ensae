@@ -289,7 +289,7 @@ def main_vanilla(
 
     # Training
 
-    return train_losses
+    return 'FINITO'
 
 
 if __name__ == "__main__":

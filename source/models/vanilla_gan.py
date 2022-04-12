@@ -116,7 +116,7 @@ class GAN():
         # loop over epochs
         for epoch in epochs_loop:
             running_loss = 0
-            batch_loop = tqdm(self.train_dataloader, desc=f"Epoch {epoch}, Training of OT-GAN")
+            batch_loop = tqdm(self.train_dataloader, desc=f"Epoch {epoch}, Training of GAN")
             for i, (images, _) in enumerate(batch_loop):
 
                 # clear
