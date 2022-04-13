@@ -3,6 +3,8 @@ import os
 import imageio
 from IPython import display
 from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
 
 from typing import Union
 
@@ -60,7 +62,7 @@ class GAN:
         self.critic = critic
         self.checkpoint_path = os.path.join(self.output_dir, self.name_save)
         self.gif_name=gif_name
-        self.gith_path = os.path.join(self.output_dir, self.gif_name)
+        self.gif_path = os.path.join(self.output_dir, self.gif_name)
 
     def sample_data(self, n_sample):
 
@@ -75,12 +77,36 @@ class GAN:
         return samples
 
     def display_image(self,n_sample):
+        # Generate fake data
         samples=self.sample_data(n_sample)
-        gif_path = self.gith_path
-        imageio.mimwrite(gif_path, samples, fps=5)
-        gifPath = Path(gif_path)
+        samples = samples * 256
+        samples = samples.astype(np.uint8)
+        samples = np.squeeze(samples, 1)
+        imageio.mimwrite(self.gif_path, samples, fps=5)
+        gifPath = Path(self.gif_path)
         with open(gifPath, 'rb') as f:
             display.Image(data=f.read(), format='png', width=200, height=200)
+        return gifPath
+
+    def visualize_generator_outputs(self, img_size=32, batch_size=8):
+        # Generate fake data
+        if self.latent_space == "uniform":
+            z = 2 * torch.rand(batch_size * batch_size, self.latent_dim) - 1
+        else:
+            z = torch.randn(batch_size * batch_size, self.latent_dim)
+        output = self.generator(z).detach()
+        output = output.view(-1, 1, img_size, img_size)
+        if output.shape[1] == 1:
+            output = output.squeeze(dim=1)
+        output = np.clip(output, 0, 1)
+
+        fig = plt.figure(figsize=(batch_size, batch_size))
+        fig.suptitle("Generated digits from latent space")
+        gridspec = fig.add_gridspec(batch_size, batch_size)
+        for idx in range(batch_size ** 2):
+            ax = fig.add_subplot(gridspec[idx])
+            ax.imshow(output[idx], cmap="gray")
+            ax.set_axis_off()
 
 
     def make_noise(self):
