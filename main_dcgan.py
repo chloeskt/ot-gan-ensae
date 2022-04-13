@@ -259,7 +259,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    main_vanilla(
+    main_dcgan(
         data_path=args.data_path,
         batch_size=args.batch_size,
         latent_dim=args.latent_dim,
