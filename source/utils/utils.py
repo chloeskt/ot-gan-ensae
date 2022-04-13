@@ -14,3 +14,4 @@ def set_seed(seed: int) -> None:
     np.random.seed(seed)
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
+

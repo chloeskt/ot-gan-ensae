@@ -85,7 +85,7 @@ def main_dcgan(
     output_shape = (1, 32, 32)
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
 
-    critic = DCGANCritic(nb_pixel, hidden_dim_critic).to(device)
+    critic = DCGANCritic(hidden_dim_critic).to(device)
     generator = DCGANGenerator(
         latent_dim, hidden_dim_gen, output_shape
     ).to(device)

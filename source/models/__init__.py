@@ -1,5 +1,5 @@
 from .activations import CReLU
-from .utils import Reshape, L2Normalize
+from .utils import Reshape, L2Normalize,normal_init
 from .otgangenerator import OTGANGenerator
 from .otgancritic import OTGANCritic
 from .vanillagan_critic import VanillaGANCritic
