@@ -5,9 +5,9 @@ from .activations import CReLU
 from .utils import Reshape, L2Normalize
 
 
-class Critic(nn.Module):
+class OTGANCritic(nn.Module):
     """
-    Critic/Discriminator architecture, inspired from https://arxiv.org/abs/1803.05573
+    OTGANCritic/Discriminator architecture, inspired from https://arxiv.org/abs/1803.05573
 
     Summary of the architecture:
         - conv kernel 5x5 stride 1

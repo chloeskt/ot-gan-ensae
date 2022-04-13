@@ -8,14 +8,14 @@ from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
 
 from early_stopping_pytorch.pytorchtools import EarlyStopping
-from ..models import Critic, Generator
+from ..models import OTGANCritic, OTGANGenerator
 from ..sinkhorn import MinibatchEnergyDistance
 
 
 def process_data_to_retrieve_loss(
     images: torch.Tensor,
-    generator: Generator,
-    critic: Critic,
+    generator: OTGANGenerator,
+    critic: OTGANCritic,
     criterion: MinibatchEnergyDistance,
     batch_size: int,
     latent_dim: int,
@@ -58,8 +58,8 @@ def process_data_to_retrieve_loss(
 
 
 def train_ot_gan(
-    critic: Critic,
-    generator: Generator,
+    critic: OTGANCritic,
+    generator: OTGANGenerator,
     train_dataloader: DataLoader,
     optimizer_generator: Optimizer,
     optimizer_critic: Optimizer,

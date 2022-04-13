@@ -6,7 +6,7 @@ from .sinkhorn_algorithm import (
     pairwise_cosine_distance,
     new_sinkhorn_algorithm,
 )
-from ..models import Critic
+from ..models import OTGANCritic
 
 
 class MinibatchEnergyDistance(nn.Module):
@@ -19,7 +19,7 @@ class MinibatchEnergyDistance(nn.Module):
         x_prime: torch.Tensor,
         y: torch.Tensor,
         y_prime: torch.Tensor,
-        critic: Critic,
+        critic: OTGANCritic,
         eps_regularization: float,
         nb_sinkhorn_iterations: int,
         device: str,
@@ -56,7 +56,7 @@ class NewMinibatchEnergyDistance(nn.Module):
         x_prime: torch.Tensor,
         y: torch.Tensor,
         y_prime: torch.Tensor,
-        critic: Critic,
+        critic: OTGANCritic,
         eps_regularization: float,
         nb_sinkhorn_iterations: int,
         device: str,

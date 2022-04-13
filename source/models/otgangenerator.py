@@ -6,9 +6,9 @@ import torch.nn as nn
 from .utils import Reshape
 
 
-class Generator(nn.Module):
+class OTGANGenerator(nn.Module):
     """
-    Generator architecture, inspired from https://arxiv.org/abs/1803.05573
+    OTGANGenerator architecture, inspired from https://arxiv.org/abs/1803.05573
 
     Summary of the architecture:
         - linear

@@ -28,34 +28,37 @@ This Python package is self-contained. A Colab link is given so that you can see
 
 # Replicate experiments
 
-To train the OT-GAN we implemented, you can use the `main` script. For instance, one can run:
+To train the OT-GAN we implemented, you can use the `main_otgan` script. For instance, one can run:
 
 ````bash
-python main.py \
+python main_otgan.py \
         --seed 0 \
         --batch_size 200 \
-        --data_path /mnt/hdd/ot-gan-ensae \
-        --epochs 50 \
-        --patience 5 \
-        --latent_dim 100 \
-        --critic_learning_rate 4e-3 \
-        --generator_learning_rate 1e-3 \
+        --data_path /content/drive/MyDrive/models \
+        --epochs 200 \
+        --patience 10 \
+        --latent_dim 50 \
+        --latent_type uniform \
+        --kernel_size 3 \
+        --critic_learning_rate 1e-4 \
+        --generator_learning_rate 1e-4 \
         --gen_hidden_dim 256 \
         --critic_hidden_dim 32 \
         --critic_output_dim 8192 \
         --weight_decay 0. \
-        --eps_regularization 0.1 \
-        --nb_sinkhorn_iterations 10 \
-        --output_dir /mnt/hdd/ot-gan-ensae/models \
+        --eps_regularization 1. \
+        --nb_sinkhorn_iterations 100 \
+        --output_dir /content/drive/MyDrive/models \
         --save True \
         --device cuda \
-        --loss_v0 True
+        --loss_v0 True \
+        --debug False
 ````
 
 To see all possible arguments, run:
 
 ```bash
-python main.py --help
+python main_otgan.py --help
 ```
 
 # Acknowledgments

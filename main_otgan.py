@@ -10,8 +10,8 @@ from torchvision.datasets import MNIST
 from source import (
     mnist_transforms,
     show_mnist_data,
-    Generator,
-    Critic,
+    OTGANGenerator,
+    OTGANCritic,
     train_ot_gan,
     MinibatchEnergyDistance,
     NewMinibatchEnergyDistance,
@@ -71,13 +71,13 @@ def main(
 
     logger.info("Creating models")
     # Models
-    generator = Generator(
+    generator = OTGANGenerator(
         latent_dim=latent_dim,
         hidden_dim=gen_hidden_dim,
         kernel_size=kernel_size,
         output_dim=gen_output_dim,
     ).to(device)
-    critic = Critic(
+    critic = OTGANCritic(
         hidden_dim=critic_hidden_dim,
         input_dim=gen_output_dim,
         kernel_size=kernel_size,
@@ -85,11 +85,11 @@ def main(
     ).to(device)
 
     # Check of shapes
-    logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
+    logger.info(f"Summary of the OTGANGenerator model with input shape ({latent_dim},)")
     summary(generator, input_size=(latent_dim,), device=device)
 
     logger.info(
-        f"Summary of the Critic model with input shape (1, {AUGMENTED_MNIST_SHAPE})"
+        f"Summary of the OTGANCritic model with input shape (1, {AUGMENTED_MNIST_SHAPE})"
     )
     summary(
         critic,
@@ -165,32 +165,41 @@ if __name__ == "__main__":
         help="Type of the latent space",
         choices=["gaussian", "uniform"],
     )
-    parser.add_argument("--kernel_size", type=int, help="Kernel size")
+    parser.add_argument("--kernel_size", type=int, help="Kernel size", choices=[3, 5])
     parser.add_argument(
-        "--gen_hidden_dim", type=int, default=1024, help="Generator hidden dimension"
+        "--gen_hidden_dim",
+        type=int,
+        default=1024,
+        help="OTGANGenerator hidden dimension",
     )
     parser.add_argument(
-        "--critic_hidden_dim", type=int, default=256, help="Critic hidden dimension"
+        "--critic_hidden_dim",
+        type=int,
+        default=256,
+        help="OTGANCritic hidden dimension",
     )
     parser.add_argument(
         "--gen_output_dim",
         type=int,
         default=1,
-        help="Generator output dimension, should correspond to the number of channels in the image",
+        help="OTGANGenerator output dimension, should correspond to the number of channels in the image",
     )
     parser.add_argument(
-        "--critic_output_dim", type=int, default=32768, help="Critic output dimension"
+        "--critic_output_dim",
+        type=int,
+        default=32768,
+        help="OTGANCritic output dimension",
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
     parser.add_argument(
         "--critic_learning_rate",
         type=float,
-        help="Learning rate for Critic using Adam optimizer",
+        help="Learning rate for OTGANCritic using Adam optimizer",
     )
     parser.add_argument(
         "--generator_learning_rate",
         type=float,
-        help="Learning rate for Generator using Adam optimizer",
+        help="Learning rate for OTGANGenerator using Adam optimizer",
     )
     parser.add_argument(
         "--weight_decay", type=float, help="Weight decay for Adam optimizer"
