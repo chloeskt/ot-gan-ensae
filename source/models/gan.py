@@ -1,10 +1,14 @@
 import logging
 import os
+import imageio
+from IPython import display
+from pathlib import Path
+
 from typing import Union
 
 import torch
 from torch.autograd import Variable
-from torch.nn import BCELoss
+import torch.nn as nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
@@ -18,6 +22,7 @@ from .vanillagan_generator import VanillaGANGenerator
 # https://github.com/Ksuryateja/DCGAN-MNIST-pytorch/blob/master/gan_mnist.py
 # (https://arxiv.org/abs/1511.06434)
 
+LossT = nn.Module
 
 class GAN:
     """GAN implementation (used to train both vanilla GAN and DCGAN)."""
@@ -37,6 +42,7 @@ class GAN:
         generator: Union[VanillaGANGenerator, None],
         critic: Union[VanillaGANCritic, None],
         n_gen: int,
+        gif_name: str = 'gan_gif.gif',
     ):
 
         self.train_dataloader = train_dataloader
@@ -53,6 +59,8 @@ class GAN:
         self.generator = generator
         self.critic = critic
         self.checkpoint_path = os.path.join(self.output_dir, self.name_save)
+        self.gif_name=gif_name
+        self.gith_path = os.path.join(self.output_dir, self.gif_name)
 
     def sample_data(self, n_sample):
 
@@ -66,10 +74,32 @@ class GAN:
 
         return samples
 
+    def display_image(self,n_sample):
+        samples=self.sample_data(n_sample)
+        gif_path = self.gith_path
+        imageio.mimwrite(gif_path, samples, fps=5)
+        gifPath = Path(gif_path)
+        with open(gifPath, 'rb') as f:
+            display.Image(data=f.read(), format='png', width=200, height=200)
+
+
+    def make_noise(self):
+        if self.latent_space == "gaussian":
+            z_random = torch.randn(self.batch_size, self.latent_dim).to(
+                self.device
+            )
+        else:
+            z_random = (
+                    2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)
+                    - 1
+            )
+        return z_random
+
+
     def train(
         self,
+        criterion: LossT,
         epochs: int = 100,
-        criterion: BCELoss = BCELoss(),
         n_gen_batch: int = 1,
         n_critic_batch: int = 1,
     ):
@@ -100,15 +130,6 @@ class GAN:
 
                 images = images.to(self.device)
 
-                if self.latent_space == "gaussian":
-                    z_random = torch.randn(self.batch_size, self.latent_dim).to(
-                        self.device
-                    )
-                else:
-                    z_random = (
-                        2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)
-                        - 1
-                    )
 
                 for iter_critic in range(n_critic_batch):
                     # update critic
@@ -122,7 +143,7 @@ class GAN:
                     #  1B: Train D on fake
 
                     G_z = self.generator(
-                        z_random
+                        self.make_noise()
                     ).detach()  # detach to avoid training G on these labels
                     G = self.critic(G_z)
                     y_fake = Variable(torch.zeros(G.shape).to(self.device))
@@ -136,7 +157,7 @@ class GAN:
 
                 for iter_gen in range(n_gen_batch):
                     # update generator
-                    G = self.generator(z_random)
+                    G = self.generator(self.make_noise())
                     G = self.critic(G)
                     y_ones = Variable(torch.ones(G.shape).to(self.device))
                     loss = criterion(G, y_ones)  # Train G to pretend it's genuine

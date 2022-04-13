@@ -37,6 +37,7 @@ def main_vanilla(
     name_save: str,
     latent_space: str,
     reduced_mnist: float,
+    hidden_dim: int,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -57,8 +58,8 @@ def main_vanilla(
         )
     else:
         total_num_in_train_set = len(train_mnist)
-        train_size = len(train_mnist) * (1 - reduced_mnist)
-        print("Number of bach in train DataLoader: {}".format(int(train_size)))
+        train_size = int((len(train_mnist) * (1 - reduced_mnist)))
+        print("Number of bach in train DataLoader: {}".format(train_size))
 
         train_indices = torch.LongTensor(train_size).random_(0, total_num_in_train_set)
         train_dataloader = torch.utils.data.DataLoader(
@@ -79,10 +80,10 @@ def main_vanilla(
     # Models
     output_shape = (1, 32, 32)
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
-    critic = VanillaGANCritic(nb_pixel, args.gen_hidden_dim).to(args.device)
+    critic = VanillaGANCritic(nb_pixel, hidden_dim).to(device)
     generator = VanillaGANGenerator(
-        args.latent_dim, args.gen_hidden_dim, output_shape
-    ).to(args.device)
+        latent_dim, hidden_dim, output_shape
+    ).to(device)
 
     # Check of shapes
     logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
@@ -128,10 +129,13 @@ def main_vanilla(
         n_gen=2,
     )
 
+    from torch.nn import BCELoss
+
     # Training
     logger.info("Start training")
-    VanillaGAN.train(epochs)
-
+    criterion=BCELoss()
+    VanillaGAN.train(criterion=criterion, epochs=epochs)
+    print('fini')
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -212,6 +216,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
     )
+    parser.add_argument(
+        "--hidden_dim",
+        type=int,
+        help="",
+    )
 
     args = parser.parse_args()
 
@@ -241,4 +250,5 @@ if __name__ == "__main__":
         name_save=args.name_save,
         latent_space=args.latent_space,
         reduced_mnist=args.reduced_mnist,
+        hidden_dim=args.hidden_dim,
     )
