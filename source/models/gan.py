@@ -1,14 +1,16 @@
 import logging
 import os
+from typing import Union
 
 import torch
-import torch.nn as nn
 from torch.autograd import Variable
+from torch.nn import BCELoss
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
 
-from early_stopping_pytorch.pytorchtools import EarlyStopping
+from .vanillagan_critic import VanillaGANCritic
+from .vanillagan_generator import VanillaGANGenerator
 
 
 # https://github.com/safwankdb/Vanilla-GAN/blob/master/vanilla_gan.py
@@ -32,8 +34,8 @@ class GAN:
         name_save: str,
         optimizer_generator: Optimizer,
         optimizer_critic: Optimizer,
-        generator,
-        critic,
+        generator: Union[VanillaGANGenerator, None],
+        critic: Union[VanillaGANCritic, None],
         n_gen: int,
     ):
 
@@ -66,16 +68,12 @@ class GAN:
 
     def train(
         self,
-        epochs=100,
-        patience=5,
-        criterion=nn.BCELoss(),
-        n_gen_batch=1,
-        n_critic_batch=1,
+        epochs: int = 100,
+        criterion: BCELoss = BCELoss(),
+        n_gen_batch: int = 1,
+        n_critic_batch: int = 1,
     ):
 
-        early_stopping = EarlyStopping(
-            patience=patience, verbose=True, path=self.checkpoint_path
-        )
         # Instantiate logger
         logger = logging.getLogger(__name__)
 
@@ -164,13 +162,10 @@ class GAN:
             )
             logger.info("\n")
 
-        # load the last checkpoint with the best model
-        self.generator.load_state_dict(torch.load(self.checkpoint_path))
-
         # Training done, save model if wanted
         if self.save:
-            logger.info(f"Saving models at {self.output_dir}, as {self.name_save}")
-            critic_path = os.path.join(self.output_dir, self.name_save)
-            torch.save(self.generator.state_dict(), critic_path)
+            logger.info(f"Saving generator at {self.output_dir}, as {self.name_save}")
+            generator_path = os.path.join(self.output_dir, self.name_save)
+            torch.save(self.generator.state_dict(), generator_path)
 
         return loss_generator, loss_critic
