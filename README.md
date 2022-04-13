@@ -34,6 +34,7 @@ To train the OT-GAN we implemented, you can use the `main_otgan` script. For ins
 python main_otgan.py \
         --seed 0 \
         --batch_size 200 \
+        --normalize_mnist False \
         --data_path /content/drive/MyDrive/models \
         --epochs 200 \
         --patience 10 \

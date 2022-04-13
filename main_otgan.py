@@ -16,6 +16,7 @@ from source import (
     MinibatchEnergyDistance,
     NewMinibatchEnergyDistance,
     set_seed,
+    mnist_transforms_with_normalization,
 )
 
 AUGMENTED_MNIST_SHAPE = 32
@@ -24,6 +25,7 @@ AUGMENTED_MNIST_SHAPE = 32
 def main(
     data_path: str,
     batch_size: int,
+    normalize_mnist: bool,
     latent_dim: int,
     latent_type: str,
     kernel_size: int,
@@ -52,9 +54,11 @@ def main(
 
     # MNIST dataset, image of size 28x28
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
-    train_mnist = MNIST(
-        data_path, train=True, download=True, transform=mnist_transforms
-    )
+    if normalize_mnist:
+        transforms = mnist_transforms_with_normalization
+    else:
+        transforms = mnist_transforms
+    train_mnist = MNIST(data_path, train=True, download=True, transform=transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
 
     logger.info("Creating dataloader")
@@ -155,6 +159,12 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0, help="Set seed")
     parser.add_argument("--batch_size", type=int, help="Batch size")
     parser.add_argument("--data_path", type=str, help="Path to store/retrieve the data")
+    parser.add_argument(
+        "--normalize_mnist",
+        type=bool,
+        default=False,
+        help="Set to True to normalize MNIST dataset",
+    )
     parser.add_argument(
         "--latent_dim", type=int, default=100, help="Dimension of the latent space"
     )
@@ -272,6 +282,7 @@ if __name__ == "__main__":
     train_losses = main(
         data_path=args.data_path,
         batch_size=args.batch_size,
+        normalize_mnist=args.normalize_mnist,
         latent_dim=args.latent_dim,
         latent_type=args.latent_type,
         kernel_size=args.kernel_size,
