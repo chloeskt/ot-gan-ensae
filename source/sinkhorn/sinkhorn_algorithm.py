@@ -3,18 +3,18 @@ from typing import Optional
 
 import torch
 
-from ..models import Critic
+from ..models import OTGANCritic
 
 
 def pairwise_cosine_distance(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    # normalization has already been done at the end of the Critic network
+    # normalization has already been done at the end of the OTGANCritic network
     return 1 - x @ y.T
 
 
 def sinkhorn_algorithm(
     x: torch.Tensor,
     y: torch.Tensor,
-    critic: Critic,
+    critic: OTGANCritic,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
@@ -47,7 +47,7 @@ def sinkhorn_algorithm(
 
     result = torch.dot(torch.matmul(k * c, b), a)
     if torch.isnan(result):
-        logger.debug("\n")
+        print()
         logger.debug("ISSUE WITH SINKHORN ALGORITHM")
         logger.debug("Kernel K", k)
         logger.debug("a", a)

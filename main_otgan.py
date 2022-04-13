@@ -10,12 +10,13 @@ from torchvision.datasets import MNIST
 from source import (
     mnist_transforms,
     show_mnist_data,
-    Generator,
-    Critic,
+    OTGANGenerator,
+    OTGANCritic,
     train_ot_gan,
     MinibatchEnergyDistance,
     NewMinibatchEnergyDistance,
     set_seed,
+    mnist_transforms_with_normalization,
 )
 
 AUGMENTED_MNIST_SHAPE = 32
@@ -24,7 +25,10 @@ AUGMENTED_MNIST_SHAPE = 32
 def main(
     data_path: str,
     batch_size: int,
+    normalize_mnist: bool,
     latent_dim: int,
+    latent_type: str,
+    kernel_size: int,
     gen_hidden_dim: int,
     critic_hidden_dim: int,
     gen_output_dim: int,
@@ -50,20 +54,17 @@ def main(
 
     # MNIST dataset, image of size 28x28
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
-    train_mnist = MNIST(
-        data_path, train=True, download=True, transform=mnist_transforms
-    )
-    val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
+    if normalize_mnist:
+        transforms = mnist_transforms_with_normalization
+    else:
+        transforms = mnist_transforms
+    train_mnist = MNIST(data_path, train=True, download=True, transform=transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
-    print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
 
     logger.info("Creating dataloader")
     ot_gan_batch_size = batch_size * 2
     train_dataloader = DataLoader(
         train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
-    )
-    val_dataloader = DataLoader(
-        val_mnist, batch_size=ot_gan_batch_size, shuffle=False, drop_last=True
     )
 
     if display:
@@ -74,21 +75,25 @@ def main(
 
     logger.info("Creating models")
     # Models
-    generator = Generator(
-        latent_dim=latent_dim, hidden_dim=gen_hidden_dim, output_dim=gen_output_dim
+    generator = OTGANGenerator(
+        latent_dim=latent_dim,
+        hidden_dim=gen_hidden_dim,
+        kernel_size=kernel_size,
+        output_dim=gen_output_dim,
     ).to(device)
-    critic = Critic(
+    critic = OTGANCritic(
         hidden_dim=critic_hidden_dim,
         input_dim=gen_output_dim,
+        kernel_size=kernel_size,
         output_dim=critic_output_dim,
     ).to(device)
 
     # Check of shapes
-    logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
+    logger.info(f"Summary of the OTGANGenerator model with input shape ({latent_dim},)")
     summary(generator, input_size=(latent_dim,), device=device)
 
     logger.info(
-        f"Summary of the Critic model with input shape (1, {AUGMENTED_MNIST_SHAPE})"
+        f"Summary of the OTGANCritic model with input shape (1, {AUGMENTED_MNIST_SHAPE})"
     )
     summary(
         critic,
@@ -127,13 +132,13 @@ def main(
         critic,
         generator,
         train_dataloader,
-        val_dataloader,
         optimizer_generator,
         optimizer_critic,
         criterion,
         epochs,
         batch_size,
         latent_dim,
+        latent_type,
         n_gen,
         eps_regularization,
         nb_sinkhorn_iterations,
@@ -155,33 +160,56 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, help="Batch size")
     parser.add_argument("--data_path", type=str, help="Path to store/retrieve the data")
     parser.add_argument(
+        "--normalize_mnist",
+        type=bool,
+        default=False,
+        help="Set to True to normalize MNIST dataset",
+    )
+    parser.add_argument(
         "--latent_dim", type=int, default=100, help="Dimension of the latent space"
     )
     parser.add_argument(
-        "--gen_hidden_dim", type=int, default=1024, help="Generator hidden dimension"
+        "--latent_type",
+        type=str,
+        default="uniform",
+        help="Type of the latent space",
+        choices=["gaussian", "uniform"],
+    )
+    parser.add_argument("--kernel_size", type=int, help="Kernel size", choices=[3, 5])
+    parser.add_argument(
+        "--gen_hidden_dim",
+        type=int,
+        default=1024,
+        help="OTGANGenerator hidden dimension",
     )
     parser.add_argument(
-        "--critic_hidden_dim", type=int, default=256, help="Critic hidden dimension"
+        "--critic_hidden_dim",
+        type=int,
+        default=256,
+        help="OTGANCritic hidden dimension",
     )
     parser.add_argument(
         "--gen_output_dim",
         type=int,
         default=1,
-        help="Generator output dimension, should correspond to the number of channels in the image",
+        help="OTGANGenerator output dimension, should correspond to the number of channels in the image",
     )
     parser.add_argument(
-        "--critic_output_dim", type=int, default=32768, help="Critic output dimension"
+        "--critic_output_dim",
+        type=int,
+        default=32768,
+        help="OTGANCritic output dimension",
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
     parser.add_argument(
         "--critic_learning_rate",
         type=float,
-        help="Learning rate for Critic using Adam optimizer",
+        help="Learning rate for OTGANCritic using Adam optimizer",
     )
     parser.add_argument(
         "--generator_learning_rate",
         type=float,
-        help="Learning rate for Generator using Adam optimizer",
+        help="Learning rate for OTGANGenerator using Adam optimizer",
     )
     parser.add_argument(
         "--weight_decay", type=float, help="Weight decay for Adam optimizer"
@@ -254,7 +282,10 @@ if __name__ == "__main__":
     train_losses = main(
         data_path=args.data_path,
         batch_size=args.batch_size,
+        normalize_mnist=args.normalize_mnist,
         latent_dim=args.latent_dim,
+        latent_type=args.latent_type,
+        kernel_size=args.kernel_size,
         gen_hidden_dim=args.gen_hidden_dim,
         critic_hidden_dim=args.critic_hidden_dim,
         gen_output_dim=args.gen_output_dim,

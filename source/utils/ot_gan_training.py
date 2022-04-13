@@ -8,17 +8,18 @@ from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
 
 from early_stopping_pytorch.pytorchtools import EarlyStopping
-from ..models import Critic, Generator
+from ..models import OTGANCritic, OTGANGenerator
 from ..sinkhorn import MinibatchEnergyDistance
 
 
 def process_data_to_retrieve_loss(
     images: torch.Tensor,
-    generator: Generator,
-    critic: Critic,
+    generator: OTGANGenerator,
+    critic: OTGANCritic,
     criterion: MinibatchEnergyDistance,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
     device: str,
@@ -29,9 +30,14 @@ def process_data_to_retrieve_loss(
     # sample X, X' from images (real data)
     x, x_prime = torch.split(images, batch_size)
 
-    # generate fake samples from latent_dim dimensional uniform dist between -1 and 1
-    z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
-    z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+    if latent_type == "uniform":
+        # generate fake samples from a latent_dim dimensional uniform dist between -1 and 1
+        z = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+        z_prime = 2 * torch.rand(batch_size, latent_dim).to(device) - 1
+    else:
+        # generate fake samples from a latent_dim dimensinal gaussian dist between 0 and 1
+        z = torch.randn(batch_size, latent_dim).to(device)
+        z_prime = torch.randn(batch_size, latent_dim).to(device)
     # feed to the generator
     y = generator(z)
     y_prime = generator(z_prime)
@@ -52,16 +58,16 @@ def process_data_to_retrieve_loss(
 
 
 def train_ot_gan(
-    critic: Critic,
-    generator: Generator,
+    critic: OTGANCritic,
+    generator: OTGANGenerator,
     train_dataloader: DataLoader,
-    val_dataloader: DataLoader,
     optimizer_generator: Optimizer,
     optimizer_critic: Optimizer,
     criterion: MinibatchEnergyDistance,
     epochs: int,
     batch_size: int,
     latent_dim: int,
+    latent_type: str,
     n_gen: int,
     eps_regularization: float,
     nb_sinkhorn_iterations: int,
@@ -104,6 +110,7 @@ def train_ot_gan(
                 criterion,
                 batch_size,
                 latent_dim,
+                latent_type,
                 eps_regularization,
                 nb_sinkhorn_iterations,
                 device,
@@ -114,7 +121,7 @@ def train_ot_gan(
                 loss *= -1
 
                 if torch.isnan(loss):
-                    logger.debug("\n")
+                    print()
                     logger.debug(f"ISSUE WITH LOSS: {loss.item()}")
                     logger.debug(f"LOSS GRADIENTS: {loss.grad}")
 
@@ -133,29 +140,16 @@ def train_ot_gan(
         epoch_loss = running_loss / len(train_dataloader.dataset)
         all_losses.append(epoch_loss)
 
-        # Evaluation and the end of each epoch
-        val_loss = evaluate_ot_gan(
-            critic,
-            generator,
-            val_dataloader,
-            criterion,
-            batch_size,
-            latent_dim,
-            eps_regularization,
-            nb_sinkhorn_iterations,
-            device,
-        )
-
-        # Early stopping if validation loss increases
+        # Early stopping if training loss increases
         # (only for generator as we update it more often than the critic)
-        early_stopping(val_loss, generator)
+        early_stopping(epoch_loss, generator)
         if early_stopping.early_stop:
             logger.info("Point of early stopping reached")
             break
 
         # Add log info
         logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
-        logger.info("\n")
+        print()
 
     # load the last checkpoint with the best model
     generator.load_state_dict(torch.load(checkpoint_path))
@@ -167,42 +161,3 @@ def train_ot_gan(
         torch.save(critic.state_dict(), critic_path)
 
     return all_losses
-
-
-def evaluate_ot_gan(
-    critic: Critic,
-    generator: Generator,
-    dataloader: DataLoader,
-    criterion: MinibatchEnergyDistance,
-    batch_size: int,
-    latent_dim: int,
-    eps_regularization: float,
-    nb_sinkhorn_iterations: int,
-    device: str,
-) -> float:
-    critic.eval()
-    generator.eval()
-
-    running_val_loss = 0.0
-    batch_loop = tqdm(dataloader, desc="Evaluation of OT-GAN")
-
-    with torch.no_grad():
-        for i, (images, _) in enumerate(batch_loop):
-            images = images.to(device)
-
-            # compute loss, Minibatch Energy Distance
-            loss = process_data_to_retrieve_loss(
-                images,
-                generator,
-                critic,
-                criterion,
-                batch_size,
-                latent_dim,
-                eps_regularization,
-                nb_sinkhorn_iterations,
-                device,
-            )
-            batch_loop.set_postfix({"Loss:": loss.item()})
-        running_val_loss += loss.item()
-
-    return running_val_loss / len(dataloader.dataset)
