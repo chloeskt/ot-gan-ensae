@@ -207,7 +207,7 @@ def main_vanilla(
 
 
     logger.info("Creating dataloader")
-    if reduced_mnist ==None:
+    if reduced_mnist == 0:
         print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
         print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
         train_dataloader = DataLoader(
@@ -219,8 +219,8 @@ def main_vanilla(
     else:
         totalNumInTrainSet = len(train_mnist)
         totalNumInValSet = len(val_mnist)
-        train_size = len(train_mnist)*reduced_mnist
-        val_size = len(val_mnist)*reduced_mnist
+        train_size = len(train_mnist)*(1-reduced_mnist)
+        val_size = len(val_mnist)*(1-reduced_mnist)
         print("Number of bach in train DataLoader: {}".format(int(train_size)))
         print("Number of bach in val DataLoader: {}".format(int(val_size)))
 
@@ -406,7 +406,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--reduced_mnist",
         type=float,
-        default=None,
+        default=0.0,
         help="% redection of mnist dataset",
     )
 

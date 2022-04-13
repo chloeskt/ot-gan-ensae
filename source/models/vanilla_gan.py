@@ -145,6 +145,7 @@ class GAN():
 
                 for iter_critic in range(n_critic_batch):
                     # update critic
+
                     #  1A: Train D on real
 
                     X_real = self.critic(images)
