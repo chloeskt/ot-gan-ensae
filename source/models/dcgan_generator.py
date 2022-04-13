@@ -9,8 +9,10 @@ class DCGANGenerator(nn.Module):
 
     def __init__(self, latent_dim: int, hidden_dim: int, output_shape):
         super(DCGANGenerator, self).__init__()
+        self.latent_dim = latent_dim
+        self.hidden_dim = hidden_dim
 
-        self.deconv1 = nn.ConvTranspose2d(latent_dim, hidden_dim, 4, 1, 0)
+        self.deconv1 = nn.ConvTranspose2d(self.latent_dim, hidden_dim, 4, 1, 0)
         self.deconv1_bn = nn.BatchNorm2d(hidden_dim)
         self.deconv2 = nn.ConvTranspose2d(hidden_dim, hidden_dim//2, 4, 2, 1)
         self.deconv2_bn = nn.BatchNorm2d(hidden_dim//2)
@@ -27,7 +29,7 @@ class DCGANGenerator(nn.Module):
             normal_init(self._modules[m], mean, std)
 
     def forward(self, x):
-        x = x.view(-1, self.z_dim, 1, 1)
+        x = x.view(-1, self.latent_dim, 1, 1)
         x = self.activ(self.deconv1_bn(self.deconv1(x)))
         x = self.activ(self.deconv2_bn(self.deconv2(x)))
         x = self.activ(self.deconv3_bn(self.deconv3(x)))
