@@ -20,7 +20,7 @@ from .vanillagan_generator import VanillaGANGenerator
 
 
 # https://github.com/safwankdb/Vanilla-GAN/blob/master/vanilla_gan.py
-
+# https://arxiv.org/pdf/1406.2661.pdf
 # https://github.com/Ksuryateja/DCGAN-MNIST-pytorch/blob/master/gan_mnist.py
 # (https://arxiv.org/abs/1511.06434)
 
@@ -43,7 +43,7 @@ class GAN:
         optimizer_critic: Optimizer,
         generator: Union[VanillaGANGenerator, None],
         critic: Union[VanillaGANCritic, None],
-        n_gen: int,
+        n_critic_batch: int,
         gif_name: str = 'gan_gif.gif',
     ):
 
@@ -55,7 +55,7 @@ class GAN:
         self.latent_space = latent_space
         self.name_save = name_save
         self.latent_dim = latent_dim
-        self.n_gen = n_gen
+        self.n_critic_batch = n_critic_batch
         self.optimizer_generator = optimizer_generator
         self.optimizer_critic = optimizer_critic
         self.generator = generator
@@ -77,8 +77,9 @@ class GAN:
         return samples
 
     def display_image(self,n_sample):
-        # Generate fake data
+        # Generate fake data as gif
         samples=self.sample_data(n_sample)
+        samples = samples*0.5+0.5
         samples = samples * 256
         samples = samples.astype(np.uint8)
         samples = np.squeeze(samples, 1)
@@ -127,7 +128,6 @@ class GAN:
         criterion: LossT,
         epochs: int = 100,
         n_gen_batch: int = 1,
-        n_critic_batch: int = 1,
     ):
 
         # Instantiate logger
@@ -143,13 +143,14 @@ class GAN:
         epochs_loop = trange(epochs)
         # loop over epochs
         for epoch in epochs_loop:
-            running_loss_critic = 0
-            running_loss_generator = 0
+            epoch_loss_critic = 0
+            epoch_loss_generator = 0
             batch_loop = tqdm(
                 self.train_dataloader, desc=f"Epoch {epoch}, Training of GAN"
             )
             for i, (images, _) in enumerate(batch_loop):
-
+                running_loss_critic = 0
+                running_loss_generator = 0
                 # clear
                 self.optimizer_generator.zero_grad()
                 self.optimizer_critic.zero_grad()
@@ -157,7 +158,7 @@ class GAN:
                 images = images.to(self.device)
 
 
-                for iter_critic in range(n_critic_batch):
+                for iter_critic in range(self.n_critic_batch):
                     # update critic
 
                     #  1A: Train D on real
@@ -191,15 +192,16 @@ class GAN:
                     loss.backward()
                     self.optimizer_generator.step()
 
-                batch_loop.set_postfix({"Loss:": loss.item()})
+                batch_loop.set_postfix({"Loss: Generator": running_loss_generator/n_gen_batch})
+                #Ajout de la loss cumulé au sein du batch
+                epoch_loss_critic+=running_loss_critic
+                epoch_loss_generator += running_loss_generator
 
             # Get average epoch loss
-            epoch_loss_critic = running_loss_critic / (
-                len(self.train_dataloader.dataset) * n_critic_batch
+            epoch_loss_critic = epoch_loss_critic / (i * self.n_critic_batch
             )
             loss_critic.append(epoch_loss_critic)
-            epoch_loss_generator = running_loss_generator / (
-                len(self.train_dataloader.dataset) * n_gen_batch
+            epoch_loss_generator = epoch_loss_generator / (i * n_gen_batch
             )
             loss_generator.append(epoch_loss_generator)
 

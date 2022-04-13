@@ -8,6 +8,7 @@ mnist_transforms_with_normalization = transforms.Compose(
     [
         transforms.ToTensor(),
         transforms.Resize((32, 32)),
-        transforms.Normalize((0.1307,), (0.3081,)),
+        #transforms.Normalize((0.1307,), (0.3081,)),
+        transforms.Normalize((0.5,), (0.5,)),
     ]
 )

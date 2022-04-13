@@ -1,10 +1,12 @@
 import argparse
 import logging
+import os
 
 import torch
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchsummary import summary
 from torchvision.datasets import MNIST
+from matplotlib import pyplot as plt
 
 from source import (
     mnist_transforms,
@@ -39,6 +41,7 @@ def main_vanilla(
     reduced_mnist: float,
     hidden_dim_gen: int,
     hidden_dim_critic :int,
+    n_critic_batch :int
 ):
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -128,7 +131,7 @@ def main_vanilla(
         optimizer_critic=optimizer_critic,
         generator=generator,
         critic=critic,
-        n_gen=2,
+        n_critic_batch=n_critic_batch,
     )
 
     from torch.nn import BCELoss
@@ -136,7 +139,16 @@ def main_vanilla(
     # Training
     logger.info("Start training")
     criterion=BCELoss()
-    VanillaGAN.train(criterion=criterion, epochs=epochs)
+    g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
+    VanillaGAN.display_image(50)
+    VanillaGAN.visualize_generator_outputs()
+    plt.savefig(os.path.join(output_dir, 'generator_output.png'))
+    plt.show()
+    plt.plot(g_losses, label='Generator Losses')
+    plt.plot(c_losses, label='Critic Losses')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'loss.png'))
+    plt.show()
     print('fini')
 
 if __name__ == "__main__":
@@ -230,6 +242,12 @@ if __name__ == "__main__":
         default=1024,
         help="",
     )
+    parser.add_argument(
+        "--n_critic_batch",
+        type=int,
+        default=1,
+        help="Nombre d'entrainement du critic par batch",
+    )
 
     args = parser.parse_args()
 
@@ -261,4 +279,6 @@ if __name__ == "__main__":
         reduced_mnist=args.reduced_mnist,
         hidden_dim_gen=args.hidden_dim_gen,
         hidden_dim_critic=args.hidden_dim_critic,
+        n_critic_batch=args.n_critic_batch,
+
     )
