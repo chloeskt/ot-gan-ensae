@@ -37,7 +37,8 @@ def main_vanilla(
     name_save: str,
     latent_space: str,
     reduced_mnist: float,
-    hidden_dim: int,
+    hidden_dim_gen: int,
+    hidden_dim_critic :int,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -80,9 +81,10 @@ def main_vanilla(
     # Models
     output_shape = (1, 32, 32)
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
-    critic = VanillaGANCritic(nb_pixel, hidden_dim).to(device)
+
+    critic = VanillaGANCritic(nb_pixel, hidden_dim_critic).to(device)
     generator = VanillaGANGenerator(
-        latent_dim, hidden_dim, output_shape
+        latent_dim, hidden_dim_gen, output_shape
     ).to(device)
 
     # Check of shapes
@@ -217,8 +219,15 @@ if __name__ == "__main__":
         "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
     )
     parser.add_argument(
-        "--hidden_dim",
+        "--hidden_dim_gen",
         type=int,
+        default=128,
+        help="",
+    )
+    parser.add_argument(
+        "--hidden_dim_critic",
+        type=int,
+        default=1024,
         help="",
     )
 
@@ -250,5 +259,6 @@ if __name__ == "__main__":
         name_save=args.name_save,
         latent_space=args.latent_space,
         reduced_mnist=args.reduced_mnist,
-        hidden_dim=args.hidden_dim,
+        hidden_dim_gen=args.hidden_dim_gen,
+        hidden_dim_critic=args.hidden_dim_critic,
     )
