@@ -12,6 +12,10 @@ import os
 
 # https://github.com/safwankdb/Vanilla-GAN/blob/master/vanilla_gan.py
 
+# https://github.com/Ksuryateja/DCGAN-MNIST-pytorch/blob/master/gan_mnist.py
+# (https://arxiv.org/abs/1511.06434)
+
+
 class VanillaCritic(nn.Module):
     """
     Basic Critic/Discriminator architecture
@@ -93,6 +97,7 @@ class GAN():
         self.checkpoint_path = os.path.join(self.output_dir, self.name_save)
 
     def sample_data(self, n_sample):
+
         if self.latent_space == 'gaussian':
             z_random = torch.randn(n_sample, self.latent_dim).to(self.device)
         else:
@@ -100,9 +105,11 @@ class GAN():
 
         samples = self.generator(z_random)
         samples = samples.detach().cpu().numpy()
+
         return samples
 
-    def train(self, epochs=100, patience=5, criterion=nn.BCELoss()):
+    def train(self, epochs=100, patience=5, criterion=nn.BCELoss(),n_gen_batch=1,
+              n_critic_batch=1):
 
         early_stopping = EarlyStopping(
             patience=patience, verbose=True, path=self.checkpoint_path
@@ -110,12 +117,18 @@ class GAN():
         # Instantiate logger
         logger = logging.getLogger(__name__)
 
-        all_losses = []
+        # Make sure models are in train mode
+        self.critic.train()
+        self.generator.train()
+
+        loss_generator = []
+        loss_critic = []
 
         epochs_loop = trange(epochs)
         # loop over epochs
         for epoch in epochs_loop:
-            running_loss = 0
+            running_loss_critic = 0
+            running_loss_generator = 0
             batch_loop = tqdm(self.train_dataloader, desc=f"Epoch {epoch}, Training of GAN")
             for i, (images, _) in enumerate(batch_loop):
 
@@ -123,8 +136,6 @@ class GAN():
                 self.optimizer_generator.zero_grad()
                 self.optimizer_critic.zero_grad()
 
-                # compute loss
-                loss = 0
                 images = images.to(self.device)
 
                 if self.latent_space == 'gaussian':
@@ -132,15 +143,16 @@ class GAN():
                 else:
                     z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)-1
 
-                if i % (self.n_gen + 1) == 0:
+                for iter_critic in range(n_critic_batch):
                     # update critic
                     #  1A: Train D on real
-                    # d_real_data = Variable(batch.cuda())
+
                     X_real = self.critic(images)
                     y_real = Variable(torch.ones(X_real.shape).to(self.device))
                     d_real_error = criterion(X_real, y_real)
 
                     #  1B: Train D on fake
+
                     G_z = self.generator(z_random).detach()  # detach to avoid training G on these labels
                     G = self.critic(G_z)
                     y_fake = Variable(torch.zeros(G.shape).to(self.device))
@@ -148,51 +160,54 @@ class GAN():
 
                     # Backward propagation on the sum of the two losses
                     loss = d_real_error + d_fake_error
+                    running_loss_critic += loss.item()
                     loss.backward()
                     self.optimizer_critic.step()
 
-                else:
+                for iter_gen in range(n_gen_batch):
                     # update generator
                     G = self.generator(z_random)
                     G = self.critic(G)
                     y_ones = Variable(torch.ones(G.shape).to(self.device))
                     loss = criterion(G, y_ones)  # Train G to pretend it's genuine
-
+                    running_loss_generator += loss.item()
                     loss.backward()
                     self.optimizer_generator.step()
 
-                running_loss += loss.item()
+
 
                 batch_loop.set_postfix({"Loss:": loss.item()})
 
             # Get average epoch loss
-            epoch_loss = running_loss / len(self.train_dataloader.dataset)
-            all_losses.append(epoch_loss)
+            epoch_loss_critic = running_loss_critic / (len(self.train_dataloader.dataset) * n_critic_batch)
+            loss_critic.append(epoch_loss_critic)
+            epoch_loss_generator = running_loss_generator / (len(self.train_dataloader.dataset) * n_gen_batch)
+            loss_generator.append(epoch_loss_generator)
 
-            running_val_loss = 0
-            batch_loop = tqdm(self.val_dataloader, desc="Evaluation of GAN")
-            with torch.no_grad():
-                for i, (images, _) in enumerate(batch_loop):
-                    # clear
-                    self.optimizer_generator.zero_grad()
-                    self.optimizer_critic.zero_grad()
-
-                    # compute loss
-                    images = images.to(self.device)
-
-                    if self.latent_space == 'gaussian':
-                        z_random = torch.randn(self.batch_size, self.latent_dim).to(self.device)
-                    else:
-                        z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)-1
-
-                    G = self.generator(z_random)
-                    G = self.critic(G)
-                    y_ones = Variable(torch.ones(G.shape).to(self.device))
-                    loss = criterion(G, y_ones)
-                    batch_loop.set_postfix({"Loss:": loss.item()})
-
-            running_val_loss += loss.item()
-            loss=running_val_loss / len(self.val_dataloader.dataset)
+            # running_val_loss = 0
+            # batch_loop = tqdm(self.val_dataloader, desc="Evaluation of GAN")
+            # with torch.no_grad():
+            #     for i, (images, _) in enumerate(batch_loop):
+            #         # clear
+            #         self.optimizer_generator.zero_grad()
+            #         self.optimizer_critic.zero_grad()
+            #
+            #         # compute loss
+            #         images = images.to(self.device)
+            #
+            #         if self.latent_space == 'gaussian':
+            #             z_random = torch.randn(self.batch_size, self.latent_dim).to(self.device)
+            #         else:
+            #             z_random = 2 * torch.rand(self.batch_size, self.latent_dim).to(self.device)-1
+            #
+            #         G = self.generator(z_random)
+            #         G = self.critic(G)
+            #         y_ones = Variable(torch.ones(G.shape).to(self.device))
+            #         loss = criterion(G, y_ones)
+            #         batch_loop.set_postfix({"Loss:": loss.item()})
+            #
+            # running_val_loss += loss.item()
+            # loss=running_val_loss / len(self.val_dataloader.dataset)
             # Early stopping if validation loss increases
             # (only for generator as we update it more often than the critic)
             #early_stopping(loss, self.generator)
@@ -201,7 +216,7 @@ class GAN():
             #    break
 
             # Add log info
-            logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
+            logger.info(f"Epoch {epoch}, Loss Generator: {epoch_loss_generator}, Loss Critic: {epoch_loss_critic}")
             logger.info("\n")
 
         # load the last checkpoint with the best model
@@ -213,7 +228,7 @@ class GAN():
             critic_path = os.path.join(self.output_dir, self.name_save)
             torch.save(self.generator.state_dict(), critic_path)
 
-        return all_losses
+        return loss_generator, loss_critic
 # def train_gan_vanilla(
 #     critic: VanillaCritic,
 #     generator: VanillaGenerator,
