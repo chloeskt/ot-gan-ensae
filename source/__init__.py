@@ -6,5 +6,7 @@ from .models import (
     VanillaGANGenerator,
     VanillaGANCritic,
     GAN,
+    DCGANGenerator,
+    DCGANCritic,
 )
 from .sinkhorn import MinibatchEnergyDistance, NewMinibatchEnergyDistance

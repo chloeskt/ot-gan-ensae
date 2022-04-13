@@ -92,11 +92,13 @@ class GAN:
     def visualize_generator_outputs(self, img_size=32, batch_size=8):
         # Generate fake data
         if self.latent_space == "uniform":
-            z = 2 * torch.rand(batch_size * batch_size, self.latent_dim) - 1
+            z = 2 * torch.rand(batch_size * batch_size, self.latent_dim).to(self.device) - 1
         else:
-            z = torch.randn(batch_size * batch_size, self.latent_dim)
+            z = torch.randn(batch_size * batch_size, self.latent_dim).to(self.device)
+
         output = self.generator(z).detach()
         output = output.view(-1, 1, img_size, img_size)
+
         if output.shape[1] == 1:
             output = output.squeeze(dim=1)
         output = np.clip(output, 0, 1)
