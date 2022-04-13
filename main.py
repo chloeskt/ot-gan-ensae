@@ -192,6 +192,7 @@ def main_vanilla(
     loss_v0: bool,
     name_save: str,
     latent_space :str,
+    reduced_mnist :float,
 ) -> List[float]:
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -203,31 +204,37 @@ def main_vanilla(
     )
     val_mnist = MNIST(data_path, train=False, download=True, transform=mnist_transforms)
     print('Changement')
-    #print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
-    #print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
+
 
     logger.info("Creating dataloader")
+    if reduced_mnist ==None:
+        print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
+        print("Number of images in MNIST val dataset: {}".format(len(val_mnist)))
+        train_dataloader = DataLoader(
+            train_mnist, batch_size=batch_size, shuffle=True, drop_last=True
+        )
+        val_dataloader = DataLoader(
+            val_mnist, batch_size=batch_size, shuffle=True, drop_last=True
+        )
+    else:
+        totalNumInTrainSet = len(train_mnist)
+        totalNumInValSet = len(val_mnist)
+        train_size = len(train_mnist)*reduced_mnist
+        val_size = len(val_mnist)*reduced_mnist
+        print("Number of bach in train DataLoader: {}".format(int(train_size)))
+        print("Number of bach in val DataLoader: {}".format(int(val_size)))
 
-    #train_dataloader = DataLoader(
-    #    train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
-    #)
+        train_indices = torch.LongTensor(train_size).random_(0, totalNumInTrainSet)
+        val_indices = torch.LongTensor(val_size).random_(0, totalNumInValSet)
+        train_dataloader = torch.utils.data.DataLoader(train_mnist,
+            batch_size=batch_size, shuffle=False, drop_last=True,
+            sampler=SubsetRandomSampler(train_indices))
 
-    totalNumInTrainSet=60000
-    totalNumInValSet = 10000
-    train_size=10000
-    val_size = 2000
-    train_indices = torch.LongTensor(train_size).random_(0, totalNumInTrainSet)
-    val_indices = torch.LongTensor(val_size).random_(0, totalNumInValSet)
-    train_dataloader = torch.utils.data.DataLoader(train_mnist,
-        batch_size=batch_size, shuffle=False, drop_last=True,
-        sampler=SubsetRandomSampler(train_indices))
+        val_dataloader = DataLoader(
+            val_mnist, batch_size=batch_size, shuffle=False, drop_last=True,
+            sampler = SubsetRandomSampler(val_indices)
+        )
 
-    val_dataloader = DataLoader(
-        val_mnist, batch_size=batch_size, shuffle=False, drop_last=True,
-        sampler = SubsetRandomSampler(val_indices)
-    )
-    #print("Number of bach in train DataLoader: {}".format(len(train_mnist)))
-    #print("Number of bach in val DataLoader: {}".format(len(val_mnist)))
 
     if display:
         images, labels = next(iter(train_dataloader))
@@ -273,7 +280,6 @@ def main_vanilla(
         weight_decay=weight_decay,
     )
 
- #   latent_space = 'uniform'
     VanillaGAN=GAN(train_dataloader,val_dataloader,
                    latent_dim,batch_size,
                    device,save,output_dir,
@@ -287,7 +293,7 @@ def main_vanilla(
     logger.info("Start training")
     VanillaGAN.train(epochs)
 
-    return 'FINITO'
+    return VanillaGAN
 
 
 if __name__ == "__main__":
@@ -397,6 +403,12 @@ if __name__ == "__main__":
         default="uniform",
         help="Uniform or gaussian latent space",
     )
+    parser.add_argument(
+        "--reduced_mnist",
+        type=float,
+        default=None,
+        help="% redection of mnist dataset",
+    )
 
     args = parser.parse_args()
 
@@ -407,7 +419,6 @@ if __name__ == "__main__":
     # potentially change log level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-    output_shape=[1,32,32]
 
     train_losses = main_vanilla(
         data_path=args.data_path,
@@ -434,5 +445,6 @@ if __name__ == "__main__":
         loss_v0=args.loss_v0,
         name_save=args.name_save,
         latent_space=args.latent_space,
+        reduced_mnist=args.reduced_mnist,
 
     )
