@@ -1,8 +1,10 @@
 import argparse
 import logging
+import os
 from typing import List
 
 import torch
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from torchsummary import summary
 from torchvision.datasets import MNIST
@@ -128,7 +130,7 @@ def main(
 
     logger.info("Start training")
     # Training
-    train_losses = train_ot_gan(
+    critic_losses, generator_losses = train_ot_gan(
         critic,
         generator,
         train_dataloader,
@@ -147,7 +149,12 @@ def main(
         save,
         output_dir,
     )
-    return train_losses
+
+    plt.plot(generator_losses, label="Generator Losses")
+    plt.plot(critic_losses, label="Critic Losses")
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, "loss.png"))
+    plt.show()
 
 
 if __name__ == "__main__":

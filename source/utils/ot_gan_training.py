@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Tuple
 
 import torch
 from torch.optim import Optimizer
@@ -75,7 +75,7 @@ def train_ot_gan(
     device: str,
     save: bool,
     output_dir: str,
-) -> List[float]:
+) -> Tuple[List[float], List[float]]:
     # EarlyStopping feature
     checkpoint_path = os.path.join(output_dir, "generator_checkpoint.pt")
     early_stopping = EarlyStopping(
@@ -89,12 +89,16 @@ def train_ot_gan(
     critic.train()
     generator.train()
 
-    all_losses = []
+    critic_losses = []
+    generator_losses = []
 
     epochs_loop = trange(epochs)
     # loop over epochs
     for epoch in epochs_loop:
-        running_loss = 0
+        running_critic_loss = 0
+        running_generator_loss = 0
+        nb_it_critic = 0
+        nb_it_generator = 0
         batch_loop = tqdm(train_dataloader, desc=f"Epoch {epoch}, Training of OT-GAN")
         for i, (images, _) in enumerate(batch_loop):
 
@@ -127,18 +131,25 @@ def train_ot_gan(
 
                 loss.backward()
                 optimizer_critic.step()
+
+                running_critic_loss += loss.item()
+                nb_it_critic += 1
             else:
                 # update generator
                 loss.backward()
                 optimizer_generator.step()
 
-            running_loss += loss.item()
+                running_generator_loss += loss.item()
+                nb_it_generator += 1
 
             batch_loop.set_postfix({"Loss:": loss.item()})
 
         # Get average epoch loss
-        epoch_loss = running_loss / len(train_dataloader.dataset)
-        all_losses.append(epoch_loss)
+        epoch_loss = (running_critic_loss + running_generator_loss) / len(
+            train_dataloader.dataset
+        )
+        critic_losses.append(running_critic_loss / nb_it_critic)
+        generator_losses.append(running_generator_loss / nb_it_generator)
 
         # Early stopping if training loss increases
         # (only for generator as we update it more often than the critic)
@@ -160,4 +171,4 @@ def train_ot_gan(
         critic_path = os.path.join(output_dir, "critic_checkpoint.pt")
         torch.save(critic.state_dict(), critic_path)
 
-    return all_losses
+    return critic_losses, generator_losses

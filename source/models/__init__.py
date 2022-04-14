@@ -1,4 +1,4 @@
 from .activations import CReLU
 from .utils import Reshape, L2Normalize
-from .otgangenerator import OTGANGenerator
-from .otgancritic import OTGANCritic
+from .otgan_generator import OTGANGenerator
+from .otgan_critic import OTGANCritic
