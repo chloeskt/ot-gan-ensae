@@ -9,10 +9,10 @@ from torchvision.datasets import MNIST
 from matplotlib import pyplot as plt
 
 from source import (
-    mnist_transforms,
+    mnist_transforms_DCGAN,
     show_mnist_data,
     set_seed,
-    mnist_transforms_with_normalization,
+    mnist_transforms_DCGAN_with_normalization,
     DCGANCritic,
     DCGANGenerator,
     GAN,
@@ -49,9 +49,9 @@ def main_dcgan(
     # MNIST dataset, image of size 28x28
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
     if normalize_mnist:
-        transforms = mnist_transforms_with_normalization
+        transforms = mnist_transforms_DCGAN_with_normalization
     else:
-        transforms = mnist_transforms
+        transforms = mnist_transforms_DCGAN
     train_mnist = MNIST(data_path, train=True, download=True, transform=transforms)
 
     logger.info("Creating dataloader")
@@ -85,9 +85,9 @@ def main_dcgan(
     output_shape = (1, 32, 32)
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
 
-    critic = DCGANCritic(hidden_dim_critic).to(device)
+    critic = DCGANCritic(hidden_dim=hidden_dim_gen).to(device)
     generator = DCGANGenerator(
-        latent_dim, hidden_dim_gen, output_shape
+        latent_dim=latent_dim, hidden_dim=hidden_dim_gen
     ).to(device)
 
     # Check of shapes
@@ -118,7 +118,7 @@ def main_dcgan(
         weight_decay=weight_decay,
     )
 
-    VanillaGAN = GAN(
+    DCGAN = GAN(
         train_dataloader=train_dataloader,
         latent_dim=latent_dim,
         batch_size=batch_size,
@@ -139,9 +139,9 @@ def main_dcgan(
     # Training
     logger.info("Start training")
     criterion=BCELoss()
-    g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
-    VanillaGAN.display_image(50)
-    VanillaGAN.visualize_generator_outputs()
+    g_losses, c_losses = DCGAN.train(criterion=criterion, epochs=epochs)
+    DCGAN.display_image(50)
+    DCGAN.visualize_generator_outputs()
     plt.savefig(os.path.join(output_dir, 'generator_output.png'))
     plt.show()
     plt.plot(g_losses, label='Generator Losses')

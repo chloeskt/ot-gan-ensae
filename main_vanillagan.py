@@ -280,5 +280,4 @@ if __name__ == "__main__":
         hidden_dim_gen=args.hidden_dim_gen,
         hidden_dim_critic=args.hidden_dim_critic,
         n_critic_batch=args.n_critic_batch,
-
     )

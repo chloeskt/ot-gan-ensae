@@ -6,23 +6,30 @@ class DCGANGenerator(nn.Module):
     """
     Basic Critic/Discriminator architecture
     """
-
-    def __init__(self, latent_dim: int, hidden_dim: int, output_shape):
+    def __init__(self, nc=1, latent_dim=100, hidden_dim=64):
         super(DCGANGenerator, self).__init__()
         self.latent_dim = latent_dim
         self.hidden_dim = hidden_dim
-
-        self.deconv1 = nn.ConvTranspose2d(self.latent_dim, hidden_dim, 4, 1, 0)
-        self.deconv1_bn = nn.BatchNorm2d(hidden_dim)
-        self.deconv2 = nn.ConvTranspose2d(hidden_dim, hidden_dim//2, 4, 2, 1)
-        self.deconv2_bn = nn.BatchNorm2d(hidden_dim//2)
-        self.deconv3 = nn.ConvTranspose2d(hidden_dim//2, hidden_dim//4, 4, 2, 1)
-        self.deconv3_bn = nn.BatchNorm2d(hidden_dim//4)
-        self.deconv4 = nn.ConvTranspose2d(hidden_dim//4, hidden_dim//8, 4, 2, 1)
-        self.deconv4_bn = nn.BatchNorm2d(hidden_dim//8)
-        self.deconv5 = nn.ConvTranspose2d(hidden_dim//8, 1, 4, 2, 1)
-
-        self.activ = nn.ReLU()
+        self.model = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(latent_dim, hidden_dim * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(hidden_dim * 8),
+            nn.ReLU(True),
+            # state size. (ngf*8) x 4 x 4
+            nn.ConvTranspose2d(hidden_dim * 8, hidden_dim * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(hidden_dim * 4),
+            nn.ReLU(True),
+            # state size. (ngf*4) x 8 x 8
+            nn.ConvTranspose2d(hidden_dim * 4, hidden_dim * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(hidden_dim * 2),
+            nn.ReLU(True),
+            # state size. (ngf*2) x 16 x 16
+            nn.ConvTranspose2d(hidden_dim * 2, hidden_dim, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(hidden_dim),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(hidden_dim, nc, kernel_size=1, stride=1, padding=2, bias=False),
+            nn.Tanh()
+        )
 
     def weight_init(self, mean, std):
         for m in self._modules:
@@ -30,10 +37,4 @@ class DCGANGenerator(nn.Module):
 
     def forward(self, x):
         x = x.view(-1, self.latent_dim, 1, 1)
-        x = self.activ(self.deconv1_bn(self.deconv1(x)))
-        x = self.activ(self.deconv2_bn(self.deconv2(x)))
-        x = self.activ(self.deconv3_bn(self.deconv3(x)))
-        x = self.activ(self.deconv4_bn(self.deconv4(x)))
-        x = torch.tanh(self.deconv5(x))
-
-        return x # Shape : (n_batch, 1, 64, 64)
+        return self.model(x)  # Shape : (n_batch, 1, 32, 32)
