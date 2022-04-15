@@ -155,10 +155,10 @@ def train_ot_gan(
         critic_losses.append(running_critic_loss / nb_it_critic)
         generator_losses.append(running_generator_loss / nb_it_generator)
 
-        # TODO: remove ?
-        # Early stopping if training loss increases
+        # Early stopping if generator loss increases
         # (only for generator as we update it more often than the critic)
-        early_stopping(epoch_loss, generator)
+        epoch_generator_loss = running_generator_loss / nb_it_generator
+        early_stopping(epoch_generator_loss, generator)
         if early_stopping.early_stop:
             logger.info("Point of early stopping reached")
             break
@@ -167,7 +167,6 @@ def train_ot_gan(
         logger.info(f"Epoch {epoch}, Loss: {epoch_loss}")
         print()
 
-        # TODO: save generated images every x epochs to make a gif representing the evolution of the generator
         every_x_epoch = 5
         if epoch % (every_x_epoch + 1) == 0:
             output_path = os.path.join(
