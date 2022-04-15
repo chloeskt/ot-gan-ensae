@@ -140,7 +140,7 @@ def main_dcgan(
     logger.info("Start training")
     criterion=BCELoss()
     g_losses, c_losses = DCGAN.train(criterion=criterion, epochs=epochs)
-    DCGAN.display_image(n_sample=10, mean=0.1307, sd=0.3081)
+    DCGAN.display_image(n_sample=100, mean=0.5, sd=0.5)
     DCGAN.visualize_generator_outputs_method(image_size=28)
     plt.savefig(os.path.join(output_dir, 'generator_output_dcgan.png'))
     plt.show()

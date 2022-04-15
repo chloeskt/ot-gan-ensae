@@ -114,7 +114,7 @@ class GAN:
         if n_sample is None:
             number = self.batch_size
         else:
-            number = n_sample * n_sample
+            number = n_sample
 
         if self.latent_space == "gaussian":
             z_random = torch.randn(number, self.latent_dim).to(
