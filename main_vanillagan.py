@@ -143,7 +143,7 @@ def main_vanilla(
     g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
     VanillaGAN.display_image(n_sample=10, mean=0.5, sd=0.5)
     VanillaGAN.visualize_generator_outputs_method()
-    plt.savefig(os.path.join(output_dir, 'generator_output.png'))
+    plt.savefig(os.path.join(output_dir, 'generator_output_vanilla.png'))
     plt.show()
     plt.plot(g_losses, label='Generator Losses')
     plt.plot(c_losses, label='Critic Losses')
