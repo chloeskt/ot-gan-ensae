@@ -95,7 +95,7 @@ class GAN:
         # Generate fake data
 
         z = self.make_noise(batch_size * batch_size)
-        output = self.generator(z).detach()
+        output = self.generator(z).detach().cpu()
         output = output.view(-1, 1, img_size, img_size)
 
         if output.shape[1] == 1:
