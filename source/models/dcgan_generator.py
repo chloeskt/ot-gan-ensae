@@ -4,7 +4,7 @@ from .utils import normal_init
 
 class DCGANGenerator(nn.Module):
     """
-    Basic Critic/Discriminator architecture
+    Basic DC GAN Generator architecture
     """
     def __init__(self, nc=1, latent_dim=100, hidden_dim=64):
         super(DCGANGenerator, self).__init__()

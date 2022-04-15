@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 
+from torch.nn import BCELoss
 import torch
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchsummary import summary
@@ -134,16 +135,16 @@ def main_vanilla(
         n_critic_batch=n_critic_batch,
     )
 
-    from torch.nn import BCELoss
+
 
     # Training
     logger.info("Start training")
     criterion=BCELoss()
     g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
     VanillaGAN.display_image(50)
-    # VanillaGAN.visualize_generator_outputs()
-    # plt.savefig(os.path.join(output_dir, 'generator_output.png'))
-    # plt.show()
+    VanillaGAN.visualize_generator_outputs_method()
+    plt.savefig(os.path.join(output_dir, 'generator_output.png'))
+    plt.show()
     plt.plot(g_losses, label='Generator Losses')
     plt.plot(c_losses, label='Critic Losses')
     plt.legend()

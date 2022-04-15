@@ -5,7 +5,7 @@ from .utils import normal_init
 
 class DCGANCritic(nn.Module):
     """
-    Basic Critic/Discriminator architecture
+    Basic DC GAN Critic/Discriminator architecture
     """
 
     def __init__(self,hidden_dim: int, nc=1):
