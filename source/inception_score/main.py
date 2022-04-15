@@ -24,11 +24,6 @@ preprocess = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# Tensor of shape 1000, with confidence scores over Imagenet's 1000 classes
-# print(output[0])
-# The output has unnormalized scores. To get probabilities, you can run a softmax on it.
-# print(probabilities)
-
 def get_proba(input_image):
     input_tensor = preprocess(input_image)
     input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
@@ -42,18 +37,15 @@ def get_proba(input_image):
 def inception_score(images, n_splits=10, eps=1E-16):
     preds = [get_proba(image) for image in images]
     preds = torch.stack(preds)
-    print("PREDS")
-    print(preds)
 
     scores = []
     for i in range(n_splits):
         part = preds[(i * preds.shape[0] // n_splits):((i + 1) * preds.shape[0] // n_splits), :]
-        print("PART")
-        print(part)
         kl = part * (torch.log(part) - torch.log(torch.unsqueeze(torch.mean(part, 0), 0)))
         kl = torch.mean(torch.sum(kl, 1))
         scores.append(torch.exp(kl))
-    scores = torch.cat(scores)
+    scores = torch.tensor(scores)
     return torch.mean(scores), torch.std(scores)
 
-inception_score([input_image for i in range(20)])
+if __name__ == '__main__':
+    inception_score([input_image for i in range(20)])
