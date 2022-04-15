@@ -3,6 +3,7 @@ from .visualization import (
     visualize_generator_outputs,
     create_gif,
     display_gif,
+    get_interpolation_image,
 )
 from .ot_gan_training import train_ot_gan
 from .utils import set_seed, generate_noise, generate_images_with_generator

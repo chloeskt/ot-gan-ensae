@@ -5,6 +5,7 @@ from .utils import (
     train_ot_gan,
     visualize_generator_outputs,
     display_gif,
+    get_interpolation_image,
 )
 from .models import OTGANGenerator, OTGANCritic
 from .sinkhorn import MinibatchEnergyDistance
