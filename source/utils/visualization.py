@@ -94,13 +94,25 @@ def get_interpolation_image(
     latent_type: str,
     device: str,
 ) -> None:
-    start_noise = generate_noise(
+    start1_noise = generate_noise(
         batch_size=1,
         latent_dim=latent_dim,
         latent_type=latent_type,
         device=device,
     )
-    end_noise = generate_noise(
+    end1_noise = generate_noise(
+        batch_size=1,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        device=device,
+    )
+    start2_noise = generate_noise(
+        batch_size=1,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        device=device,
+    )
+    end2_noise = generate_noise(
         batch_size=1,
         latent_dim=latent_dim,
         latent_type=latent_type,
@@ -108,11 +120,18 @@ def get_interpolation_image(
     )
 
     vectors = []
-    alphas = torch.linspace(0, 1, nb_images)
+    alphas = torch.linspace(0, 1, int(nb_images**0.5))
+
     # linear interpolation
-    for alpha in alphas:
-        v = start_noise * (1 - alpha) + end_noise * alpha
-        vectors.append(v)
+    for alpha1 in alphas:
+        for alpha2 in alphas:
+            v = (
+                start1_noise * (1 - alpha1)
+                + end1_noise * alpha1
+                + start2_noise * (1 - alpha2)
+                + end2_noise * alpha2
+            ) / 2
+            vectors.append(v)
 
     vectors = torch.vstack(vectors)
     images_generated = generator(vectors).detach().numpy()
