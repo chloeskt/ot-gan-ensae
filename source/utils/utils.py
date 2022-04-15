@@ -3,8 +3,7 @@ import random
 
 import numpy as np
 import torch
-
-from .visualization import GeneratorT
+import torch.nn as nn
 
 
 def set_seed(seed: int) -> None:
@@ -32,7 +31,7 @@ def generate_noise(
 
 
 def generate_images_with_generator(
-    generator: GeneratorT,
+    generator: nn.Module,
     batch_size: int,
     latent_dim: int,
     latent_type: str,
@@ -41,7 +40,7 @@ def generate_images_with_generator(
     z = generate_noise(
         batch_size=batch_size, latent_dim=latent_dim, latent_type=latent_type
     )
-    output = generator(z).detach()
+    output = generator(z).detach().cpu()
     output = output.view(-1, 1, img_size, img_size)
     if output.shape[1] == 1:
         output = output.squeeze(dim=1)

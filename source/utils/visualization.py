@@ -7,8 +7,6 @@ from IPython import display
 
 from .utils import generate_images_with_generator
 
-GeneratorT = nn.Module
-
 
 def show_mnist_data(batch_of_images: np.array) -> None:
     im = torchvision.utils.make_grid(batch_of_images)
@@ -16,7 +14,7 @@ def show_mnist_data(batch_of_images: np.array) -> None:
 
 
 def visualize_generator_outputs(
-    generator: GeneratorT,
+    generator: nn.Module,
     latent_dim: int,
     latent_type: str = "uniform",
     img_size: int = 32,
@@ -41,7 +39,7 @@ def visualize_generator_outputs(
 
 def create_gif(
     batch_size: int,
-    generator: GeneratorT,
+    generator: nn.Module,
     latent_dim: int,
     latent_type: str,
     gif_path: str,
@@ -59,3 +57,6 @@ def create_gif(
 
     with open(gif_path, "rb") as f:
         display.Image(data=f.read(), format="png", width=img_size, height=img_size)
+
+
+# TODO: interpolation
