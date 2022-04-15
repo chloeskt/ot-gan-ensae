@@ -1,22 +1,23 @@
 import argparse
 import logging
-from typing import List
+import os
 
 import torch
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from torchsummary import summary
 from torchvision.datasets import MNIST
 
 from source import (
     mnist_transforms,
-    show_mnist_data,
     OTGANGenerator,
     OTGANCritic,
     train_ot_gan,
     MinibatchEnergyDistance,
-    NewMinibatchEnergyDistance,
     set_seed,
     mnist_transforms_with_normalization,
+    MNIST_MEAN,
+    MNIST_STD,
 )
 
 AUGMENTED_MNIST_SHAPE = 32
@@ -46,9 +47,7 @@ def main(
     output_dir: str,
     save: bool,
     device: str,
-    display: bool,
-    loss_v0: bool,
-) -> List[float]:
+) -> None:
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
 
@@ -56,8 +55,12 @@ def main(
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
     if normalize_mnist:
         transforms = mnist_transforms_with_normalization
+        mean = MNIST_MEAN
+        std = MNIST_STD
     else:
         transforms = mnist_transforms
+        mean = 0.0
+        std = 1.0
     train_mnist = MNIST(data_path, train=True, download=True, transform=transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
 
@@ -66,12 +69,6 @@ def main(
     train_dataloader = DataLoader(
         train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
     )
-
-    if display:
-        images, labels = next(iter(train_dataloader))
-        print("Labels: ", labels)
-        print("Batch shape: ", images.size())
-        show_mnist_data(images)
 
     logger.info("Creating models")
     # Models
@@ -121,14 +118,11 @@ def main(
 
     logger.info("Instantiate Mini-Batch Energy Distance Loss")
     # Define criterion
-    if loss_v0:
-        criterion = MinibatchEnergyDistance()
-    else:
-        criterion = NewMinibatchEnergyDistance()
+    criterion = MinibatchEnergyDistance()
 
     logger.info("Start training")
     # Training
-    train_losses = train_ot_gan(
+    critic_losses, generator_losses = train_ot_gan(
         critic,
         generator,
         train_dataloader,
@@ -146,8 +140,15 @@ def main(
         device,
         save,
         output_dir,
+        mean,
+        std,
     )
-    return train_losses
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(generator_losses, label="Generator Losses")
+    plt.plot(critic_losses, label="Critic Losses")
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, "loss.png"))
 
 
 if __name__ == "__main__":
@@ -249,24 +250,12 @@ if __name__ == "__main__":
         help="Whether to save best models' checkpoints or not",
     )
     parser.add_argument(
-        "--display",
-        type=bool,
-        default=False,
-        help="Whether to display images, set to True only if you are in a Jupyter notebook",
-    )
-    parser.add_argument(
         "--device",
         type=str,
         help="Device on which to run the code, either cuda or cpu.",
     )
     parser.add_argument(
         "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
-    )
-    parser.add_argument(
-        "--loss_v0",
-        type=bool,
-        default=True,
-        help="Set to True to use MinibatchEnergyDistance and to False to use NewMinibatchEnergyDistance ",
     )
 
     args = parser.parse_args()
@@ -279,7 +268,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    train_losses = main(
+    main(
         data_path=args.data_path,
         batch_size=args.batch_size,
         normalize_mnist=args.normalize_mnist,
@@ -303,6 +292,4 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         save=args.save,
         device=args.device,
-        display=args.display,
-        loss_v0=args.loss_v0,
     )

@@ -30,21 +30,21 @@ class GAN:
     """GAN implementation (used to train both vanilla GAN and DCGAN)."""
 
     def __init__(
-            self,
-            train_dataloader: DataLoader,
-            latent_dim: int,
-            batch_size: int,
-            device: str,
-            save: bool,
-            output_dir: str,
-            latent_space: str,
-            name_save: str,
-            optimizer_generator: Optimizer,
-            optimizer_critic: Optimizer,
-            generator: Union[VanillaGANGenerator, None],
-            critic: Union[VanillaGANCritic, None],
-            n_critic_batch: int,
-            gif_name: str = 'gan_gif.gif',
+        self,
+        train_dataloader: DataLoader,
+        latent_dim: int,
+        batch_size: int,
+        device: str,
+        save: bool,
+        output_dir: str,
+        latent_space: str,
+        name_save: str,
+        optimizer_generator: Optimizer,
+        optimizer_critic: Optimizer,
+        generator: Union[VanillaGANGenerator, None],
+        critic: Union[VanillaGANCritic, None],
+        n_critic_batch: int,
+        gif_name: str = "gan_gif.gif",
     ):
 
         self.train_dataloader = train_dataloader
@@ -76,7 +76,7 @@ class GAN:
     #
     #     return samples
 
-    def display_image(self, n_sample,mean=0.5,sd=0.5):
+    def display_image(self, n_sample, mean=0.5, sd=0.5):
         # Generate fake data as gif
         z = self.make_noise(n_sample)
         samples = self.generator(z)
@@ -87,8 +87,8 @@ class GAN:
         samples = np.squeeze(samples, 1)
         imageio.mimwrite(self.gif_path, samples, fps=5)
         gifPath = Path(self.gif_path)
-        with open(gifPath, 'rb') as f:
-            display.Image(data=f.read(), format='png', width=200, height=200)
+        with open(gifPath, "rb") as f:
+            display.Image(data=f.read(), format="png", width=200, height=200)
         return gifPath
 
     def visualize_generator_outputs_method(self, img_size=32, batch_size=8):
@@ -105,7 +105,7 @@ class GAN:
         fig = plt.figure(figsize=(batch_size, batch_size))
         fig.suptitle("Generated digits from latent space")
         gridspec = fig.add_gridspec(batch_size, batch_size)
-        for idx in range(batch_size ** 2):
+        for idx in range(batch_size**2):
             ax = fig.add_subplot(gridspec[idx])
             ax.imshow(output[idx], cmap="gray")
             ax.set_axis_off()
@@ -117,21 +117,16 @@ class GAN:
             number = n_sample
 
         if self.latent_space == "gaussian":
-            z_random = torch.randn(number, self.latent_dim).to(
-                self.device
-            )
+            z_random = torch.randn(number, self.latent_dim).to(self.device)
         else:
-            z_random = (
-                    2 * torch.rand(number, self.latent_dim).to(self.device)
-                    - 1
-            )
+            z_random = 2 * torch.rand(number, self.latent_dim).to(self.device) - 1
         return z_random
 
     def train(
-            self,
-            criterion: LossT,
-            epochs: int = 100,
-            n_gen_batch: int = 1,
+        self,
+        criterion: LossT,
+        epochs: int = 100,
+        n_gen_batch: int = 1,
     ):
 
         # Instantiate logger
@@ -195,17 +190,17 @@ class GAN:
                     loss.backward()
                     self.optimizer_generator.step()
 
-                batch_loop.set_postfix({"Loss: Generator": running_loss_generator / n_gen_batch})
+                batch_loop.set_postfix(
+                    {"Loss: Generator": running_loss_generator / n_gen_batch}
+                )
                 # Ajout de la loss cumulé au sein du batch
                 epoch_loss_critic += running_loss_critic
                 epoch_loss_generator += running_loss_generator
 
             # Get average epoch loss
-            epoch_loss_critic = epoch_loss_critic / (i * self.n_critic_batch
-                                                     )
+            epoch_loss_critic = epoch_loss_critic / (i * self.n_critic_batch)
             loss_critic.append(epoch_loss_critic)
-            epoch_loss_generator = epoch_loss_generator / (i * n_gen_batch
-                                                           )
+            epoch_loss_generator = epoch_loss_generator / (i * n_gen_batch)
             loss_generator.append(epoch_loss_generator)
 
             # Add log info

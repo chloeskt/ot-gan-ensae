@@ -2,10 +2,12 @@ import torch
 import torch.nn as nn
 from .utils import normal_init
 
+
 class DCGANGenerator(nn.Module):
     """
     Basic DC GAN Generator architecture
     """
+
     def __init__(self, nc=1, latent_dim=100, hidden_dim=64):
         super(DCGANGenerator, self).__init__()
         self.latent_dim = latent_dim
@@ -27,8 +29,10 @@ class DCGANGenerator(nn.Module):
             nn.ConvTranspose2d(hidden_dim * 2, hidden_dim, 4, 2, 1, bias=False),
             nn.BatchNorm2d(hidden_dim),
             nn.ReLU(True),
-            nn.ConvTranspose2d(hidden_dim, nc, kernel_size=1, stride=1, padding=2, bias=False),
-            nn.Tanh()
+            nn.ConvTranspose2d(
+                hidden_dim, nc, kernel_size=1, stride=1, padding=2, bias=False
+            ),
+            nn.Tanh(),
         )
 
     def weight_init(self, mean, std):
