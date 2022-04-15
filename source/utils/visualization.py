@@ -1,7 +1,13 @@
+import imageio
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
+import torch.nn as nn
 import torchvision
+from IPython import display
+
+from .utils import generate_images_with_generator
+
+GeneratorT = nn.Module
 
 
 def show_mnist_data(batch_of_images: np.array) -> None:
@@ -10,22 +16,19 @@ def show_mnist_data(batch_of_images: np.array) -> None:
 
 
 def visualize_generator_outputs(
-    generator,
-    latent_dim,
-    latent_type="uniform",
-    img_size=32,
-    batch_size=8,
+    generator: GeneratorT,
+    latent_dim: int,
+    latent_type: str = "uniform",
+    img_size: int = 32,
+    batch_size: int = 8,
 ):
-    # Generate fake data
-    if latent_type == "uniform":
-        z = 2 * torch.rand(batch_size * batch_size, latent_dim) - 1
-    else:
-        z = torch.randn(batch_size * batch_size, latent_dim)
-    output = generator(z).detach()
-    output = output.view(-1, 1, img_size, img_size)
-    if output.shape[1] == 1:
-        output = output.squeeze(dim=1)
-    output = np.clip(output, 0, 1)
+    output = generate_images_with_generator(
+        generator=generator,
+        batch_size=batch_size,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        img_size=img_size,
+    )
 
     fig = plt.figure(figsize=(batch_size, batch_size))
     fig.suptitle("Generated digits from latent space")
@@ -34,3 +37,25 @@ def visualize_generator_outputs(
         ax = fig.add_subplot(gridspec[idx])
         ax.imshow(output[idx], cmap="gray")
         ax.set_axis_off()
+
+
+def create_gif(
+    batch_size: int,
+    generator: GeneratorT,
+    latent_dim: int,
+    latent_type: str,
+    gif_path: str,
+    img_size: int = 200,
+):
+    output = generate_images_with_generator(
+        generator=generator,
+        batch_size=batch_size,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        img_size=img_size,
+    )
+
+    imageio.mimwrite(gif_path, output, fps=5)
+
+    with open(gif_path, "rb") as f:
+        display.Image(data=f.read(), format="png", width=img_size, height=img_size)
