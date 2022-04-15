@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-from typing import List
 
 import torch
 from matplotlib import pyplot as plt
@@ -11,12 +10,10 @@ from torchvision.datasets import MNIST
 
 from source import (
     mnist_transforms,
-    show_mnist_data,
     OTGANGenerator,
     OTGANCritic,
     train_ot_gan,
     MinibatchEnergyDistance,
-    NewMinibatchEnergyDistance,
     set_seed,
     mnist_transforms_with_normalization,
 )
@@ -48,9 +45,7 @@ def main(
     output_dir: str,
     save: bool,
     device: str,
-    display: bool,
-    loss_v0: bool,
-) -> List[float]:
+) -> None:
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
 
@@ -68,12 +63,6 @@ def main(
     train_dataloader = DataLoader(
         train_mnist, batch_size=ot_gan_batch_size, shuffle=True, drop_last=True
     )
-
-    if display:
-        images, labels = next(iter(train_dataloader))
-        print("Labels: ", labels)
-        print("Batch shape: ", images.size())
-        show_mnist_data(images)
 
     logger.info("Creating models")
     # Models
@@ -123,10 +112,7 @@ def main(
 
     logger.info("Instantiate Mini-Batch Energy Distance Loss")
     # Define criterion
-    if loss_v0:
-        criterion = MinibatchEnergyDistance()
-    else:
-        criterion = NewMinibatchEnergyDistance()
+    criterion = MinibatchEnergyDistance()
 
     logger.info("Start training")
     # Training
@@ -256,24 +242,12 @@ if __name__ == "__main__":
         help="Whether to save best models' checkpoints or not",
     )
     parser.add_argument(
-        "--display",
-        type=bool,
-        default=False,
-        help="Whether to display images, set to True only if you are in a Jupyter notebook",
-    )
-    parser.add_argument(
         "--device",
         type=str,
         help="Device on which to run the code, either cuda or cpu.",
     )
     parser.add_argument(
         "--debug", type=bool, default=False, help="Set to True to get DEBUG logs"
-    )
-    parser.add_argument(
-        "--loss_v0",
-        type=bool,
-        default=True,
-        help="Set to True to use MinibatchEnergyDistance and to False to use NewMinibatchEnergyDistance ",
     )
 
     args = parser.parse_args()
@@ -286,7 +260,7 @@ if __name__ == "__main__":
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    train_losses = main(
+    main(
         data_path=args.data_path,
         batch_size=args.batch_size,
         normalize_mnist=args.normalize_mnist,
@@ -310,6 +284,4 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         save=args.save,
         device=args.device,
-        display=args.display,
-        loss_v0=args.loss_v0,
     )

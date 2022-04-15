@@ -151,6 +151,7 @@ def train_ot_gan(
         critic_losses.append(running_critic_loss / nb_it_critic)
         generator_losses.append(running_generator_loss / nb_it_generator)
 
+        # TODO: remove ?
         # Early stopping if training loss increases
         # (only for generator as we update it more often than the critic)
         early_stopping(epoch_loss, generator)
