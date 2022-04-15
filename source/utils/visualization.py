@@ -41,6 +41,7 @@ def visualize_generator_outputs(
         fig.suptitle(f"Generated digits from latent space at epoch {epoch}")
     else:
         fig.suptitle("Generated digits from latent space")
+
     gridspec = fig.add_gridspec(batch_size, batch_size)
     for idx in range(batch_size**2):
         ax = fig.add_subplot(gridspec[idx])

@@ -18,3 +18,10 @@ class L2Normalize(nn.Module):
     @staticmethod
     def forward(x):
         return F.normalize(x, dim=1, p=2)
+
+
+def normal_init(m, mean, std):
+    """Custom random initialization for DCGAN generator and critic."""
+    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+        m.weight.data.normal_(mean, std)
+        m.bias.data.zero_()
