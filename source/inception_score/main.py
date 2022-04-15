@@ -39,39 +39,21 @@ def get_proba(input_image):
     probabilities = torch.nn.functional.softmax(output[0], dim=0)
     return (probabilities)
 
-def calculate_inception_score(images, n_split=10, eps=1E-16):
-    # yhat = images.apply(get_proba)
-    yhat = [get_proba(image) for image in images]
-    yhat = torch.stack(yhat)
-    print('yhat')
-    print(yhat.shape)
-    scores = list()
-    n_batches = np.floor(np.array(len(images))/ n_split)
-    for i in range(n_split):
-        # retrieve p(y|x)
-        ix_start, ix_end = int(i * n_batches), int((i + 1) * n_batches)
-        print('ix')
-        print(ix_start)
-        print(ix_end)
-        p_yx = yhat[ix_start:ix_end]
-        print('pyx')
-        print(p_yx)
-        # calculate p(y)
-        p_y = np.expand_dims(p_yx.mean(axis=0), 0)
-        print('py')
-        print(p_y)
-        # calculate KL divergence using log probabilities
-        kl_d = p_yx * (np.log(p_yx + eps) - np.log(p_y + eps))
-        # sum over classes
-        sum_kl_d = kl_d.sum(axis=1)
-        # average over images
-        avg_kl_d = np.mean(sum_kl_d)
-        # undo the log
-        is_score = np.exp(avg_kl_d)
-        # store
-        scores.append(is_score)
-# average across images
-    is_avg, is_std = np.mean(scores), np.std(scores)
-    return is_avg, is_std
+def inception_score(images, n_splits=10, eps=1E-16):
+    preds = [get_proba(image) for image in images]
+    preds = torch.stack(preds)
+    print("PREDS")
+    print(preds)
 
-calculate_inception_score([input_image for i in range(20)])
+    scores = []
+    for i in range(n_splits):
+        part = preds[(i * preds.shape[0] // n_splits):((i + 1) * preds.shape[0] // n_splits), :]
+        print("PART")
+        print(part)
+        kl = part * (torch.log(part) - torch.log(torch.unsqueeze(torch.mean(part, 0), 0)))
+        kl = torch.mean(torch.sum(kl, 1))
+        scores.append(torch.exp(kl))
+    scores = torch.cat(scores)
+    return torch.mean(scores), torch.std(scores)
+
+inception_score([input_image for i in range(20)])
