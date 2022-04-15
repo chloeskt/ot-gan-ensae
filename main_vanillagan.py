@@ -148,7 +148,7 @@ def main_vanilla(
     plt.plot(g_losses, label='Generator Losses')
     plt.plot(c_losses, label='Critic Losses')
     plt.legend()
-    plt.savefig(os.path.join(output_dir, 'loss.png'))
+    plt.savefig(os.path.join(output_dir, 'loss_vanilla.png'))
     plt.show()
     print('fini')
 
