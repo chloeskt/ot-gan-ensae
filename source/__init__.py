@@ -1,4 +1,17 @@
-from .data import mnist_transforms, mnist_transforms_with_normalization
+from .data import (
+    mnist_transforms,
+    mnist_transforms_with_normalization,
+    mnist_transforms_DCGAN,
+    mnist_transforms_DCGAN_with_normalization)
+
 from .utils import show_mnist_data, set_seed, train_ot_gan, visualize_generator_outputs
-from .models import OTGANGenerator, OTGANCritic
+from .models import (
+    OTGANGenerator,
+    OTGANCritic,
+    VanillaGANGenerator,
+    VanillaGANCritic,
+    GAN,
+    DCGANGenerator,
+    DCGANCritic,
+)
 from .sinkhorn import MinibatchEnergyDistance, NewMinibatchEnergyDistance

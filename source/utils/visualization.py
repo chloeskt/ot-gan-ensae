@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision
+import torch.nn as nn
 
 
 def show_mnist_data(batch_of_images: np.array) -> None:
@@ -34,3 +35,4 @@ def visualize_generator_outputs(
         ax = fig.add_subplot(gridspec[idx])
         ax.imshow(output[idx], cmap="gray")
         ax.set_axis_off()
+
