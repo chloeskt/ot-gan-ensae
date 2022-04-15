@@ -16,6 +16,8 @@ from source import (
     MinibatchEnergyDistance,
     set_seed,
     mnist_transforms_with_normalization,
+    MNIST_MEAN,
+    MNIST_STD,
 )
 
 AUGMENTED_MNIST_SHAPE = 32
@@ -53,8 +55,12 @@ def main(
     # Resize them to 32x32 (to take the exact same architecture as in paper's experiment on CIFAR-10
     if normalize_mnist:
         transforms = mnist_transforms_with_normalization
+        mean = MNIST_MEAN
+        std = MNIST_STD
     else:
         transforms = mnist_transforms
+        mean = 0.0
+        std = 1.0
     train_mnist = MNIST(data_path, train=True, download=True, transform=transforms)
     print("Number of images in MNIST train dataset: {}".format(len(train_mnist)))
 
@@ -134,13 +140,15 @@ def main(
         device,
         save,
         output_dir,
+        mean,
+        std,
     )
 
+    plt.figure(figsize=(9, 6))
     plt.plot(generator_losses, label="Generator Losses")
     plt.plot(critic_losses, label="Critic Losses")
     plt.legend()
     plt.savefig(os.path.join(output_dir, "loss.png"))
-    plt.show()
 
 
 if __name__ == "__main__":

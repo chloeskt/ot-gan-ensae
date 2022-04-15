@@ -18,13 +18,13 @@ def set_seed(seed: int) -> None:
 
 
 def generate_noise(
-    batch_size: int, latent_dim: int, latent_type: str = "uniform"
+    batch_size: int, latent_dim: int, device: str, latent_type: str = "uniform"
 ) -> torch.Tensor:
     # Generate fake data
     if latent_type == "uniform":
-        z = 2 * torch.rand(batch_size * batch_size, latent_dim) - 1
+        z = 2 * torch.rand(batch_size * batch_size, latent_dim).to(device) - 1
     elif latent_type == "gaussian":
-        z = torch.randn(batch_size * batch_size, latent_dim)
+        z = torch.randn(batch_size * batch_size, latent_dim).to(device)
     else:
         raise NotImplementedError
     return z
@@ -35,15 +35,19 @@ def generate_images_with_generator(
     batch_size: int,
     latent_dim: int,
     latent_type: str,
-    img_size: int = 200,
-):
+    device: str,
+    img_size: int = 32,
+) -> np.array:
     z = generate_noise(
-        batch_size=batch_size, latent_dim=latent_dim, latent_type=latent_type
+        batch_size=batch_size,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        device=device,
     )
     output = generator(z).detach().cpu()
     output = output.view(-1, 1, img_size, img_size)
     if output.shape[1] == 1:
         output = output.squeeze(dim=1)
-    output = np.clip(output, 0, 1)
+    output = np.clip(output.numpy(), 0, 1)
 
     return output
