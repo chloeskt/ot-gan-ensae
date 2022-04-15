@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm import trange, tqdm
 
 from early_stopping_pytorch.pytorchtools import EarlyStopping
-from .visualization import create_gif
+from .visualization import create_gif, visualize_generator_outputs
 from ..models import OTGANCritic, OTGANGenerator
 from ..sinkhorn import MinibatchEnergyDistance
 
@@ -165,6 +165,13 @@ def train_ot_gan(
         print()
 
         # TODO: save generated images every x epochs to make a gif representing the evolution of the generator
+        output_path = os.path.join(output_dir, f"generator_images_epoch_{epoch}.png")
+        visualize_generator_outputs(
+            generator=generator,
+            latent_dim=latent_dim,
+            output_path=output_path,
+            save=True
+        )
 
     # load the last checkpoint with the best model
     generator.load_state_dict(torch.load(checkpoint_path))

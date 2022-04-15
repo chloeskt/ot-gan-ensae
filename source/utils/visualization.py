@@ -1,3 +1,5 @@
+from typing import Optional
+
 import imageio
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,9 +18,11 @@ def show_mnist_data(batch_of_images: np.array) -> None:
 def visualize_generator_outputs(
     generator: nn.Module,
     latent_dim: int,
+    output_path: Optional[str] = None,
     latent_type: str = "uniform",
     img_size: int = 32,
     batch_size: int = 8,
+    save: bool = False,
 ):
     output = generate_images_with_generator(
         generator=generator,
@@ -35,6 +39,9 @@ def visualize_generator_outputs(
         ax = fig.add_subplot(gridspec[idx])
         ax.imshow(output[idx], cmap="gray")
         ax.set_axis_off()
+
+    if save:
+        plt.save(output_path)
 
 
 def create_gif(
