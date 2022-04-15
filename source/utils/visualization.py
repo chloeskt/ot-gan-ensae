@@ -3,11 +3,12 @@ from typing import Optional
 import imageio
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import torch.nn as nn
 import torchvision
 from IPython.display import display, Image
 
-from .utils import generate_images_with_generator
+from .utils import generate_images_with_generator, generate_noise
 
 
 def show_mnist_data(batch_of_images: np.array) -> None:
@@ -86,19 +87,39 @@ def display_gif(gif_path: str, img_size: int = 200) -> None:
         display(img)
 
 
-# TODO: interpolation
-# def get_interpolation_image() -> None:
-#     n = 20
-#     image_size = 28
-#     fig, ax = plt.subplots(n, n, figsize=(20, 20))
-#     fig.subplots_adjust(wspace=0, hspace=0)
-#     with torch.no_grad():
-#         Z = torch.linspace(0, 1, n)
-#         for i in range(n):
-#             for j in range(n):
-#                 z = torch.tensor([[Z[i], Z[j]]])
-#                 img = generator(z)
-#                 img = img.reshape(1, 1, image_size, image_size)
-#                 ax[i, j].imshow(img.numpy().squeeze(), cmap='gray')
-#                 ax[i, j].axis('off')
-#     plt.show()
+def get_interpolation_image(
+    generator: nn.Module,
+    nb_images: int,
+    latent_dim: int,
+    latent_type: str,
+    device: str,
+) -> None:
+    start_noise = generate_noise(
+        batch_size=1,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        device=device,
+    )
+    end_noise = generate_noise(
+        batch_size=1,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        device=device,
+    )
+
+    vectors = []
+    alphas = torch.linspace(0, 1, nb_images)
+    # linear interpolation
+    for alpha in alphas:
+        v = start_noise * (1 - alpha) + end_noise * alpha
+        vectors.append(v)
+
+    vectors = torch.vstack(vectors)
+    images_generated = generator(vectors).detach().numpy()
+
+    size = int(np.sqrt(nb_images))
+
+    fig, axes = plt.subplots(size, size, figsize=(size, size))
+    for ax, img in zip(axes.flatten(), images_generated):
+        ax.imshow(img[0], cmap="gray", interpolation="nearest")
+        ax.axis("off")

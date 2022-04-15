@@ -182,15 +182,11 @@ def train_ot_gan(
                 device=device,
             )
 
-
-
     # load the last checkpoint with the best model
     generator.load_state_dict(torch.load(checkpoint_path))
 
     # save generated images for the last epoch done
-    output_path = os.path.join(
-        output_dir, f"generator_images_epoch_{epoch}.png"
-    )
+    output_path = os.path.join(output_dir, f"generator_images_epoch_{epoch}.png")
     visualize_generator_outputs(
         generator=generator,
         latent_dim=latent_dim,
