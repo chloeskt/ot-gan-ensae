@@ -141,7 +141,7 @@ def main_vanilla(
     logger.info("Start training")
     criterion=BCELoss()
     g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
-    VanillaGAN.display_image(50)
+    VanillaGAN.display_image(n_sample=50, mean=0.5, sd=0.5)
     VanillaGAN.visualize_generator_outputs_method()
     plt.savefig(os.path.join(output_dir, 'generator_output.png'))
     plt.show()

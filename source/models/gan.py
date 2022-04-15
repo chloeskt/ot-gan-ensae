@@ -76,12 +76,12 @@ class GAN:
     #
     #     return samples
 
-    def display_image(self, n_sample):
+    def display_image(self, n_sample,mean=0.5,sd=0.5):
         # Generate fake data as gif
         z = self.make_noise(n_sample)
         samples = self.generator(z)
         samples = samples.detach().cpu().numpy()
-        samples = samples * 0.3081 + 0.1307
+        samples = samples * sd + mean
         samples = samples * 256
         samples = samples.astype(np.uint8)
         samples = np.squeeze(samples, 1)
