@@ -14,6 +14,7 @@ class InceptionScore:
         if torch.cuda.is_available():
             self.model.to('cuda')
 
+        # Adapt images to Inception model
         self.preprocess = transforms.Compose([
             transforms.Resize(299),
             transforms.CenterCrop(299),
