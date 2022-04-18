@@ -63,6 +63,7 @@ def create_gif(
     device: str = "cpu",
     std: float = 1.0,
     mean: float = 0.0,
+    normalization: bool = False,
 ) -> None:
     if inputs is None:
         inputs = generate_images_with_generator(
@@ -75,11 +76,16 @@ def create_gif(
         )
 
     # conversion
-    inputs = inputs * std + mean
-    inputs = inputs * 256
-    inputs = inputs.astype(np.uint8)
-    # write gif
-    imageio.mimwrite(gif_path, inputs, fps=5)
+    if normalization:
+        inputs = inputs * std + mean
+        inputs = inputs * 256
+        inputs = inputs.astype(np.uint8)
+
+    if type(inputs) != np.array:
+        inputs = np.array(inputs)
+
+        # write gif
+    imageio.mimwrite(gif_path, inputs, fps=1)
 
 
 def display_gif(gif_path: str, img_size: int = 200) -> None:

@@ -3,10 +3,11 @@ import logging
 import os
 
 import torch
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.nn import BCELoss
 from torchsummary import summary
 from torchvision.datasets import MNIST
-from matplotlib import pyplot as plt
 
 from source import (
     mnist_transforms_DCGAN,
@@ -40,8 +41,8 @@ def main_dcgan(
     latent_space: str,
     reduced_mnist: float,
     hidden_dim_gen: int,
-    hidden_dim_critic :int,
-    n_critic_batch :int
+    hidden_dim_critic: int,
+    n_critic_batch: int,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -86,9 +87,9 @@ def main_dcgan(
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
 
     critic = DCGANCritic(hidden_dim=hidden_dim_gen).to(device)
-    generator = DCGANGenerator(
-        latent_dim=latent_dim, hidden_dim=hidden_dim_gen
-    ).to(device)
+    generator = DCGANGenerator(latent_dim=latent_dim, hidden_dim=hidden_dim_gen).to(
+        device
+    )
 
     # Check of shapes
     logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
@@ -134,22 +135,21 @@ def main_dcgan(
         n_critic_batch=n_critic_batch,
     )
 
-    from torch.nn import BCELoss
-
     # Training
     logger.info("Start training")
     criterion = BCELoss()
     g_losses, c_losses = DCGAN.train(criterion=criterion, epochs=epochs)
     DCGAN.display_image(n_sample=100, mean=0.5, sd=0.5)
     DCGAN.visualize_generator_outputs_method(img_size=28)
-    plt.savefig(os.path.join(output_dir, 'generator_output_dcgan.png'))
+    plt.savefig(os.path.join(output_dir, "generator_output_dcgan.png"))
     plt.show()
-    plt.plot(g_losses, label='Generator Losses')
-    plt.plot(c_losses, label='Critic Losses')
+    plt.plot(g_losses, label="Generator Losses")
+    plt.plot(c_losses, label="Critic Losses")
     plt.legend()
-    plt.savefig(os.path.join(output_dir, 'loss_DCGAN.png'))
+    plt.savefig(os.path.join(output_dir, "loss_DCGAN.png"))
     plt.show()
-    print('fini')
+    print("Done")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         "--reduced_mnist",
         type=float,
         default=0.0,
-        help="% redection of mnist dataset",
+        help="% reduction of mnist dataset",
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
     parser.add_argument(
@@ -280,5 +280,4 @@ if __name__ == "__main__":
         hidden_dim_gen=args.hidden_dim_gen,
         hidden_dim_critic=args.hidden_dim_critic,
         n_critic_batch=args.n_critic_batch,
-
     )

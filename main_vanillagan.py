@@ -41,8 +41,8 @@ def main_vanilla(
     latent_space: str,
     reduced_mnist: float,
     hidden_dim_gen: int,
-    hidden_dim_critic :int,
-    n_critic_batch :int
+    hidden_dim_critic: int,
+    n_critic_batch: int,
 ):
     logger = logging.getLogger(__name__)
     logger.info("Loading requested data")
@@ -87,9 +87,7 @@ def main_vanilla(
     nb_pixel = output_shape[0] * output_shape[1] * output_shape[2]
 
     critic = VanillaGANCritic(nb_pixel, hidden_dim_critic).to(device)
-    generator = VanillaGANGenerator(
-        latent_dim, hidden_dim_gen, output_shape
-    ).to(device)
+    generator = VanillaGANGenerator(latent_dim, hidden_dim_gen, output_shape).to(device)
 
     # Check of shapes
     logger.info(f"Summary of the Generator model with input shape ({latent_dim},)")
@@ -135,22 +133,21 @@ def main_vanilla(
         n_critic_batch=n_critic_batch,
     )
 
-
-
     # Training
     logger.info("Start training")
-    criterion=BCELoss()
+    criterion = BCELoss()
     g_losses, c_losses = VanillaGAN.train(criterion=criterion, epochs=epochs)
     VanillaGAN.display_image(n_sample=50, mean=0.5, sd=0.5)
     VanillaGAN.visualize_generator_outputs_method()
-    plt.savefig(os.path.join(output_dir, 'generator_output_vanilla.png'))
+    plt.savefig(os.path.join(output_dir, "generator_output_vanilla.png"))
     plt.show()
-    plt.plot(g_losses, label='Generator Losses')
-    plt.plot(c_losses, label='Critic Losses')
+    plt.plot(g_losses, label="Generator Losses")
+    plt.plot(c_losses, label="Critic Losses")
     plt.legend()
-    plt.savefig(os.path.join(output_dir, 'loss_vanilla.png'))
+    plt.savefig(os.path.join(output_dir, "loss_vanilla.png"))
     plt.show()
-    print('fini')
+    print("Done")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

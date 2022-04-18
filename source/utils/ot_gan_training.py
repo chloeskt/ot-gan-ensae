@@ -217,14 +217,24 @@ def train_ot_gan(
         std=std,
     )
 
-    # TODO:
     # retrieve all previously saved images
     all_paths = []
     for path in os.listdir(output_dir):
-        if path.endswith(".png"):
+        if path.endswith(".png") and path != "loss.png":
             all_paths.append(os.path.join(output_dir, path))
 
     # transform them into numpy arrays
     all_np_images = [plt.imread(image) for image in all_paths]
+
+    # Create gif from them
+    create_gif(
+        batch_size=batch_size,
+        generator=generator,
+        latent_dim=latent_dim,
+        latent_type=latent_type,
+        gif_path=os.path.join(output_dir, "every_epoch_gif.gif"),
+        inputs=all_np_images,
+        normalization=False,
+    )
 
     return critic_losses, generator_losses
