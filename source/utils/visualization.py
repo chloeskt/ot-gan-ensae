@@ -149,3 +149,4 @@ def get_interpolation_image(
     for ax, img in zip(axes.flatten(), images_generated):
         ax.imshow(img[0], cmap="gray", interpolation="nearest")
         ax.axis("off")
+    plt.title("Interpolation between 4 digits")
