@@ -3,10 +3,11 @@ import logging
 import os
 
 import torch
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.nn import BCELoss
 from torchsummary import summary
 from torchvision.datasets import MNIST
-from matplotlib import pyplot as plt
 
 from source import (
     mnist_transforms_DCGAN,
@@ -134,8 +135,6 @@ def main_dcgan(
         n_critic_batch=n_critic_batch,
     )
 
-    from torch.nn import BCELoss
-
     # Training
     logger.info("Start training")
     criterion = BCELoss()
@@ -149,7 +148,7 @@ def main_dcgan(
     plt.legend()
     plt.savefig(os.path.join(output_dir, "loss_DCGAN.png"))
     plt.show()
-    print("fini")
+    print("Done")
 
 
 if __name__ == "__main__":
@@ -180,7 +179,7 @@ if __name__ == "__main__":
         "--reduced_mnist",
         type=float,
         default=0.0,
-        help="% redection of mnist dataset",
+        help="% reduction of mnist dataset",
     )
     parser.add_argument("--epochs", type=int, help="Number of epochs to train models")
     parser.add_argument(
