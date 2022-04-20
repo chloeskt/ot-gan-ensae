@@ -9,32 +9,48 @@ InceptionScoreMetricT = Tuple[torch.Tensor, torch.Tensor]
 
 
 class MnistScore:
-    def __init__(self, classifer_path='classifier.pt', device=torch.device('cpu'), n_splits: int = 10) -> None:
+    def __init__(self, classifer_path=None, device=torch.device('cpu'), n_splits: int = 10) -> None:
         torch.manual_seed(42)
         self.n_splits = n_splits
         self.device = device
-        self.classifier = nn.Sequential(
-            nn.Conv2d(1, 4, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(4, 4, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(4, 4, kernel_size=3, padding=1, stride=2),
-            nn.ReLU(),
-            nn.Conv2d(4, 1, kernel_size=3, padding=1, stride=2),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(49, 10)
-        ).to(self.device)
-        self.classifier.load_state_dict(classifer_path)
+        if classifer_path is None:
+            self.classifier = nn.Sequential(
+                nn.Conv2d(1, 4, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.Conv2d(4, 4, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.Conv2d(4, 4, kernel_size=3, padding=1, stride=2),
+                nn.ReLU(),
+                nn.Conv2d(4, 1, kernel_size=3, padding=1, stride=2),
+                nn.ReLU(),
+                nn.Flatten(),
+                nn.Linear(49, 10)
+            ).to(self.device)
+            self.classifier.load_state_dict(
+                torch.load(classifer_path, map_location=device))
+        else:
+            self.classifier = torch.load(classifer_path, map_location=device)
+        self.preprocess = transforms.Compose(
+            [
+                transforms.CenterCrop((28, 28)),
+            ]
+        )
+
+    def reshape(self, image):
+        image = torch.unsqueeze(image, dim=0)
+        return torch.unsqueeze(image, dim=0)
 
     def get_proba(self, input_image: np.array) -> torch.Tensor:
         self.classifier.eval().requires_grad_(False)
-        predictions = torch.softmax(classifier(input_image.to(device)), dim=1)
+        classif = self.classifier(input_image)
+        predictions = torch.softmax(classif, dim=1)
         return (predictions)
 
     def get_inception_score(self, images: List[np.array]) -> InceptionScoreMetricT:
+        images = [self.reshape(self.preprocess(image)) for image in images]
         preds = [self.get_proba(image) for image in images]
         preds = torch.stack(preds)
+        print(preds)
 
         scores = []
         for i in range(self.n_splits):
@@ -113,3 +129,14 @@ class InceptionScore:
             scores.append(torch.exp(kl))
         scores = torch.tensor(scores)
         return torch.mean(scores), torch.std(scores)
+
+
+if __name__ == "__main__":
+    from source import generate_stack_images_for_inception_score
+    otgan_images = generate_stack_images_for_inception_score(
+        generator=otgan_generator,
+        latent_dim=50,
+        to_rgb=False
+    )
+    scorer = MnistScore(classifer_path='source/inception_score/classifier.pt')
+    mean, std = scorer.get_inception_score(otgan_images)
