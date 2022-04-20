@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import torch
 import numpy as np
 import torch.nn as nn
 from PIL import Image
@@ -32,6 +33,7 @@ def generate_stack_images_for_inception_score(
     latent_type: str = "gaussian",
     img_size: int = 32,
     device: str = "cpu",
+    to_rgb: bool = True
 ):
     output = generate_images_with_generator(
         generator=generator,
@@ -41,7 +43,10 @@ def generate_stack_images_for_inception_score(
         img_size=img_size,
         device=device,
     )
-    output = [grayscale_to_rgb(im) for im in output]
-    output = [Image.fromarray(im) for im in output]
-    save_images(output)
+    if to_rgb:
+        output = [grayscale_to_rgb(im) for im in output]
+        output = [Image.fromarray(im) for im in output]
+        save_images(output)
+    else:
+        output = torch.Tensor(output)
     return output
