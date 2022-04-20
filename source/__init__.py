@@ -11,7 +11,8 @@ from .data import (
 from .inception_score import (
     InceptionScore,
     generate_stack_images_for_inception_score,
-    InceptionNet
+    InceptionNet,
+    MnistScore,
 )
 from .models import (
     OTGANGenerator,
