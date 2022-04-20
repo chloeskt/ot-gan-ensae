@@ -33,7 +33,7 @@ def generate_stack_images_for_inception_score(
     latent_type: str = "gaussian",
     img_size: int = 32,
     device: str = "cpu",
-    to_rgb: bool = True
+    to_rgb: bool = True,
 ):
     output = generate_images_with_generator(
         generator=generator,
