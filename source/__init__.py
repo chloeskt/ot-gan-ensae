@@ -8,6 +8,11 @@ from .data import (
     mnist_transforms_DCGAN,
     mnist_transforms_DCGAN_with_normalization,
 )
+from .inception_score import (
+    InceptionScore,
+    generate_stack_images_for_inception_score,
+    InceptionNet
+)
 from .models import (
     OTGANGenerator,
     OTGANCritic,
@@ -30,5 +35,5 @@ from .utils import (
     show_mnist_data,
     set_seed,
     train_ot_gan,
-    visualize_generator_outputs,
+    generate_images_with_generator,
 )

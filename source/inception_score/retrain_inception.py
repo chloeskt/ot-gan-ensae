@@ -1,40 +1,39 @@
 # https://github.com/pytorch/examples/blob/master/mnist/main.py
 
 from __future__ import print_function
-import argparse
+
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
 from torch.autograd import Variable
-from pathlib import Path
+from torchvision import datasets, transforms
 
 # Training settings
 batch_size = 64
 
 # MNIST Dataset
-train_dataset = datasets.MNIST(root='./data/',
-                               train=True,
-                               transform=transforms.ToTensor(),
-                               download=True)
+train_dataset = datasets.MNIST(
+    root="./data/", train=True, transform=transforms.ToTensor(), download=True
+)
 
-test_dataset = datasets.MNIST(root='./data/',
-                              train=False,
-                              transform=transforms.ToTensor())
+test_dataset = datasets.MNIST(
+    root="./data/", train=False, transform=transforms.ToTensor()
+)
 
 # Data Loader (Input Pipeline)
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                           batch_size=batch_size,
-                                           shuffle=True)
+train_loader = torch.utils.data.DataLoader(
+    dataset=train_dataset, batch_size=batch_size, shuffle=True
+)
 
-test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                          batch_size=batch_size,
-                                          shuffle=False)
+test_loader = torch.utils.data.DataLoader(
+    dataset=test_dataset, batch_size=batch_size, shuffle=False
+)
 
 
 class InceptionA(nn.Module):
-
     def __init__(self, in_channels):
         super(InceptionA, self).__init__()
         self.branch1x1 = nn.Conv2d(in_channels, 16, kernel_size=1)
@@ -65,10 +64,9 @@ class InceptionA(nn.Module):
         return torch.cat(outputs, 1)
 
 
-class Net(nn.Module):
-
+class InceptionNet(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(InceptionNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(88, 20, kernel_size=5)
 
@@ -89,7 +87,7 @@ class Net(nn.Module):
         return F.log_softmax(x)
 
 
-model = Net()
+model = InceptionNet()
 
 optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
 
@@ -104,9 +102,15 @@ def train(epoch):
         loss.backward()
         optimizer.step()
         if batch_idx % 10 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.data.item()))
+            print(
+                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                    epoch,
+                    batch_idx * len(data),
+                    len(train_loader.dataset),
+                    100.0 * batch_idx / len(train_loader),
+                    loss.data.item(),
+                )
+            )
 
 
 def test():
@@ -123,13 +127,18 @@ def test():
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+    print(
+        "\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+            test_loss,
+            correct,
+            len(test_loader.dataset),
+            100.0 * correct / len(test_loader.dataset),
+        )
+    )
 
 
 if __name__ == "__main__":
     for epoch in range(1, 10):
         train(epoch)
         test()
-    torch.save(model.state_dict(), Path('source/inception_score/inception'))
+    torch.save(model.state_dict(), Path("source/inception_score/inception"))
