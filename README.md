@@ -26,6 +26,10 @@ This Python package is self-contained. A Colab link is given so that you can see
 
 - [ ] Add final colab link. 
 
+# Pretrained models
+
+All pretrained models are available [here](https://drive.google.com/drive/folders/1RV0xTk7eZnGPDUOxUWnMOA_Cu6wo5zWJ?usp=sharing).
+
 # Replicate experiments
 
 To train the OT-GAN we implemented, you can use the `main_otgan` script. For instance, one can run:
@@ -35,7 +39,7 @@ python main_otgan.py \
         --seed 0 \
         --batch_size 200 \
         --normalize_mnist False \
-        --data_path /content/drive/MyDrive/models \
+        --data_path /content/drive/MyDrive/GANs/OTGAN \
         --epochs 200 \
         --patience 10 \
         --latent_dim 50 \
@@ -49,11 +53,9 @@ python main_otgan.py \
         --weight_decay 0. \
         --eps_regularization 1. \
         --nb_sinkhorn_iterations 100 \
-        --output_dir /content/drive/MyDrive/models \
+        --output_dir /content/drive/MyDrive/GANs/OTGAN \
         --save True \
-        --device cuda \
-        --loss_v0 True \
-        --debug False
+        --device cuda
 ````
 
 To see all possible arguments, run:
@@ -65,7 +67,3 @@ python main_otgan.py --help
 # Acknowledgments
 
 The ``early_stopping_pytorch`` module has been taken from: https://github.com/Bjarten/early-stopping-pytorch 
-
-# GANs and Optimal Transport
-
-- [ ] TODO: add description, explanations etc

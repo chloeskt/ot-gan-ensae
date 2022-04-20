@@ -146,6 +146,7 @@ def get_interpolation_image(
     size = int(np.sqrt(nb_images))
 
     fig, axes = plt.subplots(size, size, figsize=(size, size))
+    fig.suptitle("Interpolation between 4 digits")
     for ax, img in zip(axes.flatten(), images_generated):
         ax.imshow(img[0], cmap="gray", interpolation="nearest")
         ax.axis("off")
