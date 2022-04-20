@@ -9,7 +9,7 @@ InceptionScoreMetricT = Tuple[torch.Tensor, torch.Tensor]
 
 
 class MnistScore:
-    def __init__(self, device=torch.device('cpu'), n_splits: int = 10) -> None:
+    def __init__(self, classifer_path='classifier.pt', device=torch.device('cpu'), n_splits: int = 10) -> None:
         torch.manual_seed(42)
         self.n_splits = n_splits
         self.device = device
@@ -25,7 +25,7 @@ class MnistScore:
             nn.Flatten(),
             nn.Linear(49, 10)
         ).to(self.device)
-        self.classifier.load_state_dict('classifier.pt')
+        self.classifier.load_state_dict(classifer_path)
 
     def get_proba(self, input_image: np.array) -> torch.Tensor:
         self.classifier.eval().requires_grad_(False)
