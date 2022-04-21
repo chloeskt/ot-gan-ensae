@@ -7,7 +7,7 @@ done by Mathilde Kaploun (ENSAE Paris), Thomas Doucet (ENSAE Paris) and Chloé S
 ## OT-GAN from scratch
 
 The goal is to implement a GAN variant that builds on Optimal Transport following the approach taken by [this paper](https://arxiv.org/abs/1803.05573),
-which develops a OT GAN. 
+which develops an OT-GAN. 
 
 # Installation 
 
@@ -24,7 +24,7 @@ and ``torchvision`` depending on your hardware.
 
 This Python package is self-contained. A Colab link is given so that you can see its applications.
 
-- [ ] Add final colab link. 
+<a href="https://colab.research.google.com/drive/1dKk1_YXdoKikM9yV2L9quL5P-Akm9o-G?usp=sharing" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> Study of 
 
 # Pretrained models
 
