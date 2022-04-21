@@ -39,7 +39,7 @@ python main_otgan.py \
         --seed 0 \
         --batch_size 200 \
         --normalize_mnist False \
-        --data_path /content/drive/MyDrive/GANs/OTGAN \
+        --data_path <<CHOSEN_DIRECTORY>> \
         --epochs 200 \
         --patience 10 \
         --latent_dim 50 \
@@ -53,7 +53,7 @@ python main_otgan.py \
         --weight_decay 0. \
         --eps_regularization 1. \
         --nb_sinkhorn_iterations 100 \
-        --output_dir /content/drive/MyDrive/GANs/OTGAN \
+        --output_dir <<CHOSEN_OUTPUT_DIRECTORY>> \
         --save True \
         --device cuda
 ````
@@ -62,6 +62,14 @@ To see all possible arguments, run:
 
 ```bash
 python main_otgan.py --help
+```
+
+```bash
+python main_vanillagan.py --help
+```
+
+```bash
+python main_dcgan.py --help
 ```
 
 # Acknowledgments
