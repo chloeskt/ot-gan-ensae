@@ -1,4 +1,4 @@
-from .inception_score import InceptionScore
+from .inception_score import InceptionScore, MnistScore
 from .utils import (
     save_images,
     grayscale_to_rgb,

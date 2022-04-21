@@ -9,7 +9,9 @@ InceptionScoreMetricT = Tuple[torch.Tensor, torch.Tensor]
 
 
 class MnistScore:
-    def __init__(self, classifer_path=None, device=torch.device('cpu'), n_splits: int = 10) -> None:
+    def __init__(
+        self, classifer_path=None, device=torch.device("cpu"), n_splits: int = 10
+    ) -> None:
         torch.manual_seed(42)
         self.n_splits = n_splits
         self.device = device
@@ -24,10 +26,11 @@ class MnistScore:
                 nn.Conv2d(4, 1, kernel_size=3, padding=1, stride=2),
                 nn.ReLU(),
                 nn.Flatten(),
-                nn.Linear(49, 10)
+                nn.Linear(49, 10),
             ).to(self.device)
             self.classifier.load_state_dict(
-                torch.load(classifer_path, map_location=device))
+                torch.load(classifer_path, map_location=device)
+            )
         else:
             self.classifier = torch.load(classifer_path, map_location=device)
         self.preprocess = transforms.Compose(
@@ -44,25 +47,23 @@ class MnistScore:
         self.classifier.eval().requires_grad_(False)
         classif = self.classifier(input_image)
         predictions = torch.softmax(classif, dim=1)
-        return (predictions)
+        return predictions
 
     def get_inception_score(self, images: List[np.array]) -> InceptionScoreMetricT:
         images = [self.reshape(self.preprocess(image)) for image in images]
         preds = [self.get_proba(image) for image in images]
         preds = torch.stack(preds)
-        print(preds)
 
         scores = []
         for i in range(self.n_splits):
             part = preds[
-                (i * preds.shape[0] // self.n_splits): (
+                (i * preds.shape[0] // self.n_splits) : (
                     (i + 1) * preds.shape[0] // self.n_splits
                 ),
                 :,
             ]
             kl = part * (
-                torch.log(part) -
-                torch.log(torch.unsqueeze(torch.mean(part, 0), 0))
+                torch.log(part) - torch.log(torch.unsqueeze(torch.mean(part, 0), 0))
             )
             kl = torch.mean(torch.sum(kl, 1))
             scores.append(torch.exp(kl))
@@ -116,27 +117,15 @@ class InceptionScore:
         scores = []
         for i in range(self.n_splits):
             part = preds[
-                (i * preds.shape[0] // self.n_splits): (
+                (i * preds.shape[0] // self.n_splits) : (
                     (i + 1) * preds.shape[0] // self.n_splits
                 ),
                 :,
             ]
             kl = part * (
-                torch.log(part) -
-                torch.log(torch.unsqueeze(torch.mean(part, 0), 0))
+                torch.log(part) - torch.log(torch.unsqueeze(torch.mean(part, 0), 0))
             )
             kl = torch.mean(torch.sum(kl, 1))
             scores.append(torch.exp(kl))
         scores = torch.tensor(scores)
         return torch.mean(scores), torch.std(scores)
-
-
-if __name__ == "__main__":
-    from source import generate_stack_images_for_inception_score
-    otgan_images = generate_stack_images_for_inception_score(
-        generator=otgan_generator,
-        latent_dim=50,
-        to_rgb=False
-    )
-    scorer = MnistScore(classifer_path='source/inception_score/classifier.pt')
-    mean, std = scorer.get_inception_score(otgan_images)
