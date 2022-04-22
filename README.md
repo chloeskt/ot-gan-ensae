@@ -9,6 +9,9 @@ done by Mathilde Kaploun (ENSAE Paris), Thomas Doucet (ENSAE Paris) and Chloé S
 The goal is to implement a GAN variant that builds on Optimal Transport following the approach taken by [this paper](https://arxiv.org/abs/1803.05573),
 which develops an OT-GAN. 
 
+We compared this OT-GAN with two other GANs: a simple basic vanilla version inspired by the
+work of [Goodfellow et al.](https://arxiv.org/pdf/1406.2661) and DCGAN inspired from [Radford et al. paper](https://arxiv.org/abs/1511.06434). 
+
 # Installation 
 
 After creating your virtual environment, please run 
@@ -24,7 +27,7 @@ and ``torchvision`` depending on your hardware.
 
 This Python package is self-contained. A Colab link is given so that you can see its applications.
 
-<a href="https://colab.research.google.com/drive/1dKk1_YXdoKikM9yV2L9quL5P-Akm9o-G?usp=sharing" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> Study of 
+<a href="https://colab.research.google.com/drive/1dKk1_YXdoKikM9yV2L9quL5P-Akm9o-G?usp=sharing" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> _Improving GANs with optimal transport_
 
 # Pretrained models
 
@@ -39,7 +42,7 @@ python main_otgan.py \
         --seed 0 \
         --batch_size 200 \
         --normalize_mnist False \
-        --data_path <<CHOSEN_DIRECTORY>> \
+        --data_path <<CHOSEN_DATA_DIRECTORY>> \
         --epochs 200 \
         --patience 10 \
         --latent_dim 50 \
