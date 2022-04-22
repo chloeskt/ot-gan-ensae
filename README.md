@@ -1,9 +1,10 @@
 # Project for the Optimal Transport course at ENSAE Paris
 
-This repository contains the code done for the final project og the Optimal Transport course at ENSAE Paris. It has been
-done by Mathilde Kaploun (ENSAE Paris), Thomas Doucet (ENSAE Paris) and Chloé Sekkat (ENSAE Paris - ENS Paris Saclay)
+This repository contains the code done for the final project of the Optimal Transport course at ENSAE Paris. It has been
+done by Mathilde Kaploun (ENSAE Paris), Thomas Doucet (ENSAE Paris) and Chloé Sekkat (ENSAE Paris \& ENS Paris Saclay)
 
 # Improving GANs using Optimal Transport
+
 ## OT-GAN from scratch
 
 The goal is to implement a GAN variant that builds on Optimal Transport following the approach taken by [this paper](https://arxiv.org/abs/1803.05573),
