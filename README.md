@@ -3,6 +3,8 @@
 This repository contains the code done for the final project of the Optimal Transport course at ENSAE Paris. It has been
 done by Mathilde Kaploun (ENSAE Paris), Thomas Doucet (ENSAE Paris) and Chloé Sekkat (ENSAE Paris \& ENS Paris Saclay)
 
+Final grade: 19/20
+
 # Improving GANs using Optimal Transport
 
 ## OT-GAN from scratch
